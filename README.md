@@ -1,4 +1,4 @@
-![Bootzooka](https://github.com/softwaremill/bootzooka/raw/master/banner.png)
+  ![Bootzooka](https://github.com/softwaremill/bootzooka/raw/master/banner.png)
 
 [See the docs](http://softwaremill.github.io/bootzooka/) for more information.
 

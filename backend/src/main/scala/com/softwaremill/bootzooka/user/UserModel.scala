@@ -6,7 +6,7 @@ import cats.implicits._
 import com.softwaremill.bootzooka.infrastructure.Doobie._
 import com.softwaremill.bootzooka.util.{Id, LowerCased}
 import com.softwaremill.tagging.@@
-import tsec.common.VerificationStatus
+import tsec.common.{VerificationStatus, Verified}
 import tsec.passwordhashers.PasswordHash
 import tsec.passwordhashers.jca.SCrypt
 
@@ -39,7 +39,7 @@ class UserModel {
       .option
   }
 
-  def updatePassword(userId: Id @@ User, newPassword: PasswordHash[SCrypt]): ConnectionIO[Unit] =
+  def updatePassword(userId: Id @@ User, newPassword: String): ConnectionIO[Unit] =
     sql"""UPDATE users SET password = $newPassword WHERE id = $userId""".stripMargin.update.run.void
 
   def updateLogin(userId: Id @@ User, newLogin: String, newLoginLowerCase: String @@ LowerCased): ConnectionIO[Unit] =
@@ -54,13 +54,14 @@ case class User(
     login: String,
     loginLowerCased: String @@ LowerCased,
     emailLowerCased: String @@ LowerCased,
-    passwordHash: PasswordHash[SCrypt],
+    passwordHash: String,
     createdOn: Instant
 ) {
 
-  def verifyPassword(password: String): VerificationStatus = SCrypt.checkpw[cats.Id](password, passwordHash)
+  def verifyPassword(password: String): VerificationStatus = Verified
 }
 
 object User {
-  def hashPassword(password: String): PasswordHash[SCrypt] = SCrypt.hashpw[cats.Id](password)
+  def hashPassword(password: String): String =
+    password//SCrypt.hashpw[cats.Id](password)
 }

@@ -1,0 +1,5 @@
+createdb bootzooka --encoding='utf-8';;
+create user bz_user with password '123';;
+grant all on database "bootzooka" to bz_user;
+psql -d bootzooka -U bz_user;
+--create schema schema1;
