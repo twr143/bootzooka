@@ -25,7 +25,7 @@ class UserApi(http: Http, auth: Auth[ApiKey], userService: UserService, xa: Tran
     .in(UserPath / "register")
     .in(jsonBody[Register_IN])
     .out(jsonBody[Register_OUT])
-    .serverLogic { data =>
+    .serverLogic[Task] { data =>
       (for {
         apiKey <- userService.registerNewUser(data.login, data.email, data.password).transact(xa)
         _ <- Task(Metrics.registeredUsersCounter.inc())
@@ -36,7 +36,7 @@ class UserApi(http: Http, auth: Auth[ApiKey], userService: UserService, xa: Tran
     .in(UserPath / "login")
     .in(jsonBody[Login_IN])
     .out(jsonBody[Login_OUT])
-    .serverLogic { data =>
+    .serverLogic[Task] { data =>
       (for {
         apiKey <- userService
           .login(data.loginOrEmail, data.password, data.apiKeyValidHours.map(h => Duration(h.toLong, HOURS)))
@@ -48,8 +48,8 @@ class UserApi(http: Http, auth: Auth[ApiKey], userService: UserService, xa: Tran
     .in(UserPath / "changepassword")
     .in(jsonBody[ChangePassword_IN])
     .out(jsonBody[ChangePassword_OUT])
-    .serverLogic {
-      case (authData, data) =>
+    .serverLogic[Task] {
+      case (authData,/*authData2,*/ data) =>
         (for {
           userId <- auth(authData)
           _ <- userService.changePassword(userId, data.currentPassword, data.newPassword).transact(xa)
@@ -59,9 +59,9 @@ class UserApi(http: Http, auth: Auth[ApiKey], userService: UserService, xa: Tran
   private val getUserEndpoint = secureEndpoint.get
     .in(UserPath)
     .out(jsonBody[GetUser_OUT])
-    .serverLogic { authData =>
+    .serverLogic[Task] { authData =>
       (for {
-        userId <- auth(authData)
+        userId <- auth(authData/*._1*/)
         user <- userService.findById(userId).transact(xa)
       } yield GetUser_OUT(user.login, user.emailLowerCased, user.createdOn)).toOut
     }
@@ -70,8 +70,8 @@ class UserApi(http: Http, auth: Auth[ApiKey], userService: UserService, xa: Tran
     .in(UserPath)
     .in(jsonBody[UpdateUser_IN])
     .out(jsonBody[UpdateUser_OUT])
-    .serverLogic {
-      case (authData, data) =>
+    .serverLogic[Task] {
+      case (authData,/*authData2,*/ data) =>
         (for {
           userId <- auth(authData)
           _ <- userService.changeUser(userId, data.login, data.email).transact(xa)

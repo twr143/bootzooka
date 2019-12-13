@@ -18,7 +18,7 @@ class PasswordResetApi(http: Http, passwordResetService: PasswordResetService, x
     .in(PasswordResetPath / "reset")
     .in(jsonBody[PasswordReset_IN])
     .out(jsonBody[PasswordReset_OUT])
-    .serverLogic { data =>
+    .serverLogic[Task] { data =>
       (for {
         _ <- passwordResetService.resetPassword(data.code, data.password)
       } yield PasswordReset_OUT()).toOut
@@ -28,7 +28,7 @@ class PasswordResetApi(http: Http, passwordResetService: PasswordResetService, x
     .in(PasswordResetPath / "forgot")
     .in(jsonBody[ForgotPassword_IN])
     .out(jsonBody[ForgotPassword_OUT])
-    .serverLogic { data =>
+    .serverLogic[Task] { data =>
       (for {
         _ <- passwordResetService.forgotPassword(data.loginOrEmail).transact(xa)
       } yield ForgotPassword_OUT()).toOut
