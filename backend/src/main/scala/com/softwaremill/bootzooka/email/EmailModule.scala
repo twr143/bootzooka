@@ -13,14 +13,14 @@ trait EmailModule extends BaseModule {
   lazy val emailScheduler: EmailScheduler = emailService
   lazy val emailTemplates = new EmailTemplates()
   // depending on the configuration, creating the appropriate EmailSender instance
-  lazy val emailSender: EmailSender = if (config.email.mailgun.enabled) {
+  lazy val emailSender: EmailSender = /*if (config.email.mailgun.enabled) {
     new MailgunEmailSender(config.email.mailgun)(sttpBackend)
-  } else if (config.email.smtp.enabled) {
+  } else*/ if (config.email.smtp.enabled) {
     new SmtpEmailSender(config.email.smtp)
   } else {
     DummyEmailSender
   }
 
   def xa: Transactor[Task]
-  def sttpBackend: SttpBackend[Task, Nothing, Nothing]
+  //def sttpBackend: SttpBackend[Task, Nothing, Nothing]
 }
