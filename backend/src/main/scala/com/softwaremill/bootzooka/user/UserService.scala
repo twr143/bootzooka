@@ -1,8 +1,6 @@
 package com.softwaremill.bootzooka.user
-
 import java.time.Clock
 
-import cats.implicits._
 import com.softwaremill.bootzooka._
 import com.softwaremill.bootzooka.email.{EmailData, EmailScheduler, EmailTemplates}
 import com.softwaremill.bootzooka.security.{ApiKey, ApiKeyService}
@@ -13,24 +11,29 @@ import com.softwaremill.bootzooka.infrastructure.Doobie._
 import com.softwaremill.bootzooka.util._
 
 import scala.concurrent.duration.Duration
+import cats.data.ValidatedNec
+import cats.implicits._
+
+import scala.collection.mutable.ArrayBuffer
 
 class UserService(
-    userModel: UserModel,
-    emailScheduler: EmailScheduler,
-    emailTemplates: EmailTemplates,
-    apiKeyService: ApiKeyService,
-    idGenerator: IdGenerator,
-    clock: Clock,
-    config: UserConfig
-) extends StrictLogging {
+                   userModel: UserModel,
+                   emailScheduler: EmailScheduler,
+                   emailTemplates: EmailTemplates,
+                   apiKeyService: ApiKeyService,
+                   idGenerator: IdGenerator,
+                   clock: Clock,
+                   config: UserConfig
+                 ) extends StrictLogging {
 
   private val LoginAlreadyUsed = "Login already in use!"
+
   private val EmailAlreadyUsed = "E-mail already in use!"
 
   def registerNewUser(login: String, email: String, password: String): ConnectionIO[ApiKey] = {
     def failIfDefined(op: ConnectionIO[Option[User]], msg: String): ConnectionIO[Unit] = {
       op.flatMap {
-        case None    => ().pure[ConnectionIO]
+        case None => ().pure[ConnectionIO]
         case Some(_) => Fail.IncorrectInput(msg).raiseError[ConnectionIO, Unit]
       }
     }
@@ -44,9 +47,7 @@ class UserService(
       val user = User(idGenerator.nextId[User](), login, login.lowerCased,
         email.lowerCased, password, clock.instant())
       val confirmationEmail = emailTemplates.registrationConfirmation(login)
-
       logger.debug(s"Registering new user: ${user.emailLowerCased}, with id: ${user.id}")
-
       for {
         _ <- userModel.insert(user)
         _ <- emailScheduler(EmailData(email, confirmationEmail))
@@ -57,7 +58,8 @@ class UserService(
     for {
       _ <- UserRegisterValidator
         .validate(login, email, password)
-        .fold(msg => Fail.IncorrectInput(msg).raiseError[ConnectionIO, Unit], _ => ().pure[ConnectionIO])
+        .fold(msg => Fail.IncorrectInputL(msg.foldLeft(List[String]())((l, v) =>  v.errorMessage :: l ))
+          .raiseError[ConnectionIO, Unit], _ => ().pure[ConnectionIO])
       _ <- checkUserDoesNotExist()
       apiKey <- doRegister()
     } yield apiKey
@@ -109,7 +111,7 @@ class UserService(
   private def userOrNotFound(op: ConnectionIO[Option[User]]): ConnectionIO[User] = {
     op.flatMap {
       case Some(user) => user.pure[ConnectionIO]
-      case None       => Fail.NotFound("user").raiseError[ConnectionIO, User]
+      case None => Fail.NotFound("user").raiseError[ConnectionIO, User]
     }
   }
 
@@ -123,25 +125,47 @@ class UserService(
 }
 
 object UserRegisterValidator {
+
   private val ValidationOk = Right(())
+
   val MinLoginLength = 3
 
-  def validate(login: String, email: String, password: String): Either[String, Unit] =
-    for {
-      _ <- validLogin(login.trim).right
-      _ <- validEmail(email.trim).right
-      _ <- validPassword(password.trim).right
-    } yield ()
+  def validate(login: String, email: String, password: String): ValidationResult[Unit] =
+    (validLogin(login.trim),
+      validEmail(email.trim),
+      validPassword(password.trim)).mapN((_, _, _) => ())
 
-  private def validLogin(login: String): Either[String, Unit] =
-    if (login.length >= MinLoginLength) ValidationOk else Left("Login is too short!")
+  private def validLogin(login: String): ValidationResult[String] =
+    if (login.length >= MinLoginLength) login.validNec else ShortLogin.invalidNec
 
   private val emailRegex =
     """^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$""".r
 
-  private def validEmail(email: String) =
-    if (emailRegex.findFirstMatchIn(email).isDefined) ValidationOk else Left("Invalid e-mail!")
+  private def validEmail(email: String): ValidationResult[String] =
+    if (emailRegex.findFirstMatchIn(email).isDefined) email.validNec else InvalidEmail.invalidNec
 
-  private def validPassword(password: String) =
-    if (password.nonEmpty) ValidationOk else Left("Password cannot be empty!")
+  private def validPassword(password: String): ValidationResult[String] =
+    if (password.nonEmpty) password.validNec else EmptyPassword.invalidNec
+
+  sealed trait UserValidation {
+
+    def errorMessage: String
+  }
+
+  case object ShortLogin extends UserValidation {
+
+    def errorMessage: String = "Login is too short!"
+  }
+
+  case object InvalidEmail extends UserValidation {
+
+    def errorMessage: String = "Invalid e-mail!"
+  }
+
+  case object EmptyPassword extends UserValidation {
+
+    def errorMessage: String = "Password cannot be empty!"
+  }
+
+  type ValidationResult[A] = ValidatedNec[UserValidation, A]
 }

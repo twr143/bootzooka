@@ -21,7 +21,7 @@ class Http() extends Tapir with TapirJsonCirce with TapirSchemas with StrictLogg
   /**
     * Description of the output, that is used to represent an error that occurred during endpoint invocation.
     */
-  val failOutput: EndpointOutput[(StatusCode, Error_OUT)] = statusCode and jsonBody[Error_OUT].map(identity)(a => Error_OUT(a.error + " 123"))
+  val failOutput: EndpointOutput[(StatusCode, Error_OUT)] = statusCode and jsonBody[Error_OUT]//.map(identity)(a => Error_OUT(a.error + " 123"))
 
   /**
     * Base endpoint description for non-secured endpoints. Specifies that errors are always returned as JSON values
@@ -51,15 +51,16 @@ class Http() extends Tapir with TapirJsonCirce with TapirSchemas with StrictLogg
     baseEndpoint.in(auth.bearer.map(_.asInstanceOf[Id])(identity))//.in(bearer2.map(_.asInstanceOf[Id])(identity))
 
   //
-  private val InternalServerError = (StatusCode.InternalServerError, "Internal server error")
+  private val InternalServerError = (StatusCode.InternalServerError, List("Internal server error"))
 
-  private val failToResponseData: Fail => (StatusCode, String) = {
-    case Fail.NotFound(what) => (StatusCode.NotFound, what)
-    case Fail.Conflict(msg) => (StatusCode.Conflict, msg)
-    case Fail.IncorrectInput(msg) => (StatusCode.BadRequest, msg)
-    case Fail.Forbidden => (StatusCode.Forbidden, "Forbidden")
-    case Fail.Unauthorized => (StatusCode.Unauthorized, "Unauthorized")
-    case Fail.UnauthorizedM(msg) => (StatusCode.Unauthorized,msg)
+  private val failToResponseData: Fail => (StatusCode, List[String]) = {
+    case Fail.NotFound(what) => (StatusCode.NotFound, List(what))
+    case Fail.Conflict(msg) => (StatusCode.Conflict, List(msg))
+    case Fail.IncorrectInput(msg) => (StatusCode.BadRequest, List(msg))
+    case Fail.IncorrectInputL(lmsg) => (StatusCode.BadRequest, lmsg)
+    case Fail.Forbidden => (StatusCode.Forbidden, List("Forbidden"))
+    case Fail.Unauthorized => (StatusCode.Unauthorized, List("Unauthorized"))
+    case Fail.UnauthorizedM(msg) => (StatusCode.Unauthorized,List(msg))
     case _ => InternalServerError
   }
 
@@ -109,4 +110,4 @@ trait TapirSchemas {
   implicit def schemaForTagged[U, T](implicit uc: Schema[U]): Schema[U @@ T] = uc.asInstanceOf[Schema[U @@ T]]
 }
 
-case class Error_OUT(error: String)
+case class Error_OUT(error: List[String])

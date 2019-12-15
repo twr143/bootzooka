@@ -41,7 +41,7 @@ class EndpointsToRoutes(http: Http, apiContextPath: String) {
     */
   private val decodeFailureHandler: DecodeFailureHandler = {
     def failResponse(code: StatusCode, msg: String): DecodeFailureHandling =
-      DecodeFailureHandling.response(http.failOutput)((code, Error_OUT(msg)))
+      DecodeFailureHandling.response(http.failOutput)((code, Error_OUT(List(msg))))
 
     val defaultHandler = ServerDefaults.decodeFailureHandler.copy(response = failResponse)
 
