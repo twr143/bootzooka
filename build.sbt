@@ -33,13 +33,13 @@ val httpDependencies = Seq(
   "org.http4s" %% "http4s-prometheus-metrics" % http4sVersion,
   "com.softwaremill.sttp.client" %% "async-http-client-backend-monix" % sttpVersion,
   "com.softwaremill.sttp.tapir" %% "tapir-http4s-server" % tapirVersion
-)
+).map(_.withSources())
 
 val monitoringDependencies = Seq(
   "io.prometheus" % "simpleclient" % prometheusVersion,
   "io.prometheus" % "simpleclient_hotspot" % prometheusVersion,
   "com.softwaremill.sttp.client" %% "prometheus-backend" % sttpVersion
-)
+).map(_.withSources())
 
 val jsonDependencies = Seq(
   "io.circe" %% "circe-core" % circeVersion,
@@ -47,7 +47,7 @@ val jsonDependencies = Seq(
   "io.circe" %% "circe-parser" % circeVersion,
   "com.softwaremill.sttp.tapir" %% "tapir-json-circe" % tapirVersion,
   "com.softwaremill.sttp.client" %% "circe" % sttpVersion
-)
+).map(_.withSources())
 
 val loggingDependencies = Seq(
   "com.typesafe.scala-logging" %% "scala-logging" % "3.9.2",
@@ -59,19 +59,19 @@ val loggingDependencies = Seq(
 
 val configDependencies = Seq(
   "com.github.pureconfig" %% "pureconfig" % "0.12.1"
-)
+).map(_.withSources())
 
 val baseDependencies = Seq(
   "io.monix" %% "monix" % "3.1.0",
   "com.softwaremill.common" %% "tagging" % "2.2.1",
   "com.softwaremill.quicklens" %% "quicklens" % "1.4.12"
-)
+).map(_.withSources())
 
 val apiDocsDependencies = Seq(
   "com.softwaremill.sttp.tapir" %% "tapir-openapi-docs" % tapirVersion,
   "com.softwaremill.sttp.tapir" %% "tapir-openapi-circe-yaml" % tapirVersion,
   "com.softwaremill.sttp.tapir" %% "tapir-swagger-ui-http4s" % tapirVersion
-)
+).map(_.withSources())
 
 val securityDependencies = Seq(
   "io.github.jmcardon" %% "tsec-password" % tsecVersion,
