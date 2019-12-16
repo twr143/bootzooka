@@ -58,9 +58,10 @@ class EndpointsToRoutes(http: Http, apiContextPath: String) {
   /**
     * Interprets the given endpoint descriptions as docs, and returns http4s routes which expose the documentation
     * using Swagger.
+    * http://localhost:8080/api/v1/docs/
     */
   def toDocsRoutes(es: ServerEndpoints): HttpRoutes[Task] = {
-    val openapi = es.toList.toOpenAPI("Bootzooka", "1.0").copy(servers = List(Server(s"$apiContextPath", None)))
+    val openapi = es.toList.toOpenAPI("BZ", "1.0").copy(servers = List(Server(s"$apiContextPath", None)))
     val yaml = openapi.toYaml
     new SwaggerHttp4s(yaml).routes[Task]
   }
