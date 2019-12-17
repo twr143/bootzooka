@@ -9,12 +9,13 @@ class LoggingSttpBackend[F[_], S, WS_HANDLER[_]](delegate: SttpBackend[F, S, WS_
     extends SttpBackend[F, S, WS_HANDLER]
     with StrictLogging {
   override def send[T](request: Request[T, S]): F[Response[T]] = {
+    val ts = System.currentTimeMillis()
     responseMonad.map(responseMonad.handleError(delegate.send(request)) {
       case e: Exception =>
         logger.error(s"Exception when sending request: $request", e)
         responseMonad.error(e)
     }) { response =>
-      logger.debug(s"For request: $request, got response: $response")
+      logger.debug(s"For request: $request, got response: $response, time ${System.currentTimeMillis()-ts} ms")
       response
     }
   }
