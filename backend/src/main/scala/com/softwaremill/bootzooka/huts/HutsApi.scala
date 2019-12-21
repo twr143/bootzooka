@@ -1,5 +1,6 @@
 package com.softwaremill.bootzooka.huts
 import java.io.File
+import java.nio.file.Files
 import java.util.concurrent.Executors
 
 import cats.data.NonEmptyList
@@ -23,6 +24,10 @@ import monix.nio.file._
 
 import scala.concurrent.ExecutionContext
 import monix.execution.Scheduler.Implicits.global
+import monix.reactive.Observable
+import sttp.tapir.{CodecFormat, Schema, SchemaType}
+import scala.concurrent.duration._
+
 //import org.http4s.multipart.Multipart
 //import sttp.tapir.Codec._
 /**
@@ -60,30 +65,34 @@ case class HutsApi(http: Http, config: HutsConfig)(implicit sttpBackend: SttpBac
       (for {
         from <- Task.now(java.nio.file.Paths.get(hb.file.getAbsolutePath))
         content <- readAsync(from, 30)(scheduler).pipeThrough(utf8Decode).foldL
+        _ <- Task.now(Files.delete(from))
       } yield HutBook_OUT(s"$content")).toOut
+  }
+
+  private val fileRetrievalEndpoint = baseEndpoint.get
+    .in(HutsPath / "fr")
+//    .in(jsonBody[HutFile_IN])
+    .out(header[String]("Content-Disposition"))
+    .out(header[String]("Content-Type"))
+    .out(binaryBody[Array[Byte]])
+    .serverLogic[Task] {
+    hf =>
+      (for {
+        r <- Task.now(("attachment; filename=resp-file.jpg",
+          "application/octet-stream",
+          Array(1.toByte,2.toByte,3.toByte)))
+      } yield r).toOut
   }
 
   val endpoints: ServerEndpoints =
     NonEmptyList
       .of(
         samplesEndpoint,
-        fileUploadEndpoint
+        fileUploadEndpoint,
+        fileRetrievalEndpoint
       )
       .map(_.tag("huts"))
 
-  def bodyParse(m: Multipart[IO]): String = {
-    m.parts.find(_.name == Some("dataFile")) match {
-      case None => s"Not file"
-      case Some(part) =>
-        s"""Multipart Data\nParts:${
-          m.parts.length
-        }
-           |File contents: ${
-          part.body.through(text.utf8Decode).compile.foldMonoid.unsafeRunSync()
-        }""".
-          stripMargin
-    }
-  }
 }
 
 object HutsApi {
@@ -101,5 +110,7 @@ object HutsApi {
   case class HutBook(title: String, file: File)
 
   case class HutBook_OUT(result: String)
+
+  case class HutFile_IN(fileId: String)
 
 }
