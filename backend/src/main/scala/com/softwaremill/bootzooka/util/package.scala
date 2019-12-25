@@ -1,8 +1,10 @@
 package com.softwaremill.bootzooka
 import java.util.Locale
+
 import cats.data.NonEmptyList
 import com.softwaremill.tagging._
 import monix.eval.Task
+import org.http4s.EntityBody
 import sttp.tapir.server.ServerEndpoint
 import tsec.common.SecureRandomId
 
@@ -17,5 +19,5 @@ package object util {
     def lowerCased: String @@ LowerCased = s.toLowerCase(Locale.ENGLISH).taggedWith[LowerCased]
   }
 
-  type ServerEndpoints = NonEmptyList[ServerEndpoint[_, _, _, Nothing, Task]]
+  type ServerEndpoints = NonEmptyList[ServerEndpoint[_, _, _, EntityBody[Task], Task]]
 }

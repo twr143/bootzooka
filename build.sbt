@@ -2,10 +2,8 @@ import sbtbuildinfo.BuildInfoKey.action
 import sbtbuildinfo.BuildInfoKeys.{buildInfoKeys, buildInfoOptions, buildInfoPackage}
 import sbtbuildinfo.{BuildInfoKey, BuildInfoOption}
 import com.typesafe.sbt.packager.docker.ExecCmd
-
 import sbt._
 import Keys._
-
 import scala.util.Try
 import scala.sys.process.Process
 import complete.DefaultParsers._
@@ -45,6 +43,7 @@ val jsonDependencies = Seq(
   "io.circe" %% "circe-core" % circeVersion,
   "io.circe" %% "circe-generic" % circeVersion,
   "io.circe" %% "circe-parser" % circeVersion,
+  "io.circe" %% "circe-generic-extras" % "0.12.2",
   "com.softwaremill.sttp.tapir" %% "tapir-json-circe" % tapirVersion,
   "com.softwaremill.sttp.client" %% "circe" % sttpVersion
 ).map(_.withSources())
@@ -82,6 +81,9 @@ val emailDependencies = Seq(
   "com.sun.mail" % "javax.mail" % "1.6.2"
 )
 
+val fs2Deps = Seq(
+  "co.fs2" %% "fs2-reactive-streams" % "2.1.0"
+)
 val scalatest = "org.scalatest" %% "scalatest" % "3.0.8" % Test
 val unitTestingStack = Seq(scalatest)
 
@@ -109,7 +111,9 @@ lazy val commonSettings = commonSmlBuildSettings ++ Seq(
     val taskName = spaceDelimited("<arg>").parsed.mkString(" ")
     updateYarn.value
     val localYarnCommand = "yarn " + taskName
+
     def runYarnTask() = Process(localYarnCommand, uiDirectory.value).!
+
     streams.value.log("Running yarn task: " + taskName)
     haltOnCmdResultError(runYarnTask())
   },
@@ -143,8 +147,8 @@ lazy val fatJarSettings = Seq(
   assemblyJarName in assembly := "bootzooka.jar",
   assembly := assembly.dependsOn(copyWebapp).value,
   assemblyMergeStrategy in assembly := {
-    case PathList(ps @ _*) if ps.last endsWith "io.netty.versions.properties" => MergeStrategy.first
-    case PathList(ps @ _*) if ps.last endsWith "pom.properties"               => MergeStrategy.first
+    case PathList(ps@_*) if ps.last endsWith "io.netty.versions.properties" => MergeStrategy.first
+    case PathList(ps@_*) if ps.last endsWith "pom.properties" => MergeStrategy.first
     case x =>
       val oldStrategy = (assemblyMergeStrategy in assembly).value
       oldStrategy(x)
@@ -158,7 +162,7 @@ lazy val dockerSettings = Seq(
   dockerUsername := Some("softwaremill"),
   dockerCommands := {
     dockerCommands.value.flatMap {
-      case ep @ ExecCmd("ENTRYPOINT", _*) =>
+      case ep@ExecCmd("ENTRYPOINT", _*) =>
         Seq(
           ExecCmd("ENTRYPOINT", "/opt/docker/docker-entrypoint.sh" :: ep.args.toList: _*)
         )
@@ -199,7 +203,8 @@ lazy val rootProject = (project in file("."))
 
 lazy val backend: Project = (project in file("backend"))
   .settings(
-    libraryDependencies ++= dbDependencies ++ httpDependencies ++ jsonDependencies ++ apiDocsDependencies ++ monitoringDependencies ++ dbTestingStack ++ securityDependencies ++ emailDependencies,
+    libraryDependencies ++= dbDependencies ++ httpDependencies ++ jsonDependencies ++ apiDocsDependencies ++ monitoringDependencies
+      ++ dbTestingStack ++ securityDependencies ++ emailDependencies ++ fs2Deps,
     mainClass in Compile := Some("com.softwaremill.bootzooka.Main")
   )
   .enablePlugins(BuildInfoPlugin)
