@@ -10,4 +10,6 @@ import com.softwaremill.bootzooka.user.UserConfig
 /**
   * Maps to the `application.conf` file. Configuration for all modules of the application.
   */
-case class Config(db: DBConfig, api: HttpConfig, email: EmailConfig, passwordReset: PasswordResetConfig, user: UserConfig, hutsService: HutsConfig)
+case class Config(db: DBConfig, api: HttpConfig, email: EmailConfig,
+                  passwordReset: PasswordResetConfig,
+                  user: UserConfig, hutsService: HutsConfig)

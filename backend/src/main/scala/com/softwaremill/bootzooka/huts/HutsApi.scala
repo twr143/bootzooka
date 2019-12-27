@@ -1,11 +1,13 @@
 package com.softwaremill.bootzooka.huts
 import java.io.File
 import java.nio.ByteBuffer
-import java.nio.file.Files
+import java.nio.file.{Files, Paths}
 import java.util.concurrent.Executors
 import cats.effect._
 import cats.data.NonEmptyList
+import cats.effect.ExitCase.{Completed, Error}
 import cats.implicits._
+import com.softwaremill.bootzooka.Fail
 import com.softwaremill.bootzooka.http.Http
 import monix.eval.Task
 import com.softwaremill.bootzooka.infrastructure.Json._
@@ -25,7 +27,9 @@ import monix.execution.Scheduler.Implicits.global
 import monix.reactive.{Observable, Pipe}
 import org.http4s.EntityBody
 import sttp.tapir.{CodecFormat, Schema, SchemaType}
+import scala.concurrent.ExecutionContext
 import scala.concurrent.duration._
+import scala.util.control.NonFatal
 
 /**
   * Created by Ilya Volynin on 16.12.2019 at 12:12.
@@ -83,24 +87,51 @@ case class HutsApi(http: Http, config: HutsConfig)(implicit sttpBackend: SttpBac
 
   // endpoint.get.in("receive").out(streamBody[Source[ByteString, Any]](schemaFor[String], CodecFormat.TextPlain()))
   import fs2._
+
   private val streamingEndpoint = baseEndpoint.get
     .in(HutsPath / "stream")
     .out(header[String]("Content-Disposition"))
     .out(streamBody[EntityBody[Task]](schemaFor[Byte], CodecFormat.OctetStream()))
     .serverLogic[Task] {
     _ =>
-      Stream.emit(List[Char]('a', 'b', 'c', 'd')).repeat.flatMap(list => Stream.chunk(Chunk.seq(list)))
-      .take(10000000).covary[Task].map(_.toByte).pure[Task]
-        .map(s => ("attachment; filename=resp-stream-file.txt", s)).toOut
+      (for {
+        r <- Stream.emit(List[Char]('a', 'b', 'c', 'd')).repeat.flatMap(list => Stream.chunk(Chunk.seq(list)))
+          .take(10000000).covary[Task].map(_.toByte).onFinalize(Task(logger.warn("stream finalized"))).pure[Task]
+          .map(s => ("attachment; filename=resp-stream-file.txt", s))
+        _ <- Task.now(logger.warn("task finished working"))
+      } yield r).toOut
+  }
+
+  private val streamReadFileBlocker = Blocker.
+    liftExecutionContext(ExecutionContext.fromExecutorService(Executors.newFixedThreadPool(4)))
+
+  private val streamingFileEndpoint = baseEndpoint.get
+    .in(HutsPath / "streamfile")
+    .in(query[String]("file"))
+    .out(header[String]("Content-Disposition"))
+    .out(streamBody[EntityBody[Task]](schemaFor[Byte], CodecFormat.OctetStream()))
+    .serverLogic[Task] {
+    file: String =>
+            io.file.exists[Task](streamReadFileBlocker,
+              Paths.get(s"${config.fileStorage.baseDir}/$file")
+            ).flatMap(
+              does =>
+                if (does)
+                  io.file.readAll[Task](
+                    Paths.get(s"${config.fileStorage.baseDir}/$file"),
+                    streamReadFileBlocker, 4096)
+                    .onFinalize(Task(logger.warn("file stream down finalized"))).pure[Task]
+                    .map(s => (s"attachment; filename=$file", s))
+                else
+                  Task.raiseError(Fail.NotFound(s"${config.fileStorage.baseDir}/$file"))
+            ).toOut
   }
 
   val endpoints: ServerEndpoints =
     NonEmptyList
       .of(
-        samplesEndpoint,
-        fileUploadEndpoint,
-        fileRetrievalEndpoint,
-        streamingEndpoint
+        samplesEndpoint, fileUploadEndpoint, fileRetrievalEndpoint, streamingEndpoint,
+        streamingFileEndpoint
       )
       .map(_.tag("huts"))
 }
