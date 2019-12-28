@@ -16,11 +16,8 @@ import com.typesafe.scalalogging.StrictLogging
 import sttp.client._
 import io.circe.syntax._
 import com.softwaremill.bootzooka.util.SttpUtils._
-import fs2.text
 import monix.execution.ExecutionModel.AlwaysAsyncExecution
 import monix.execution.Scheduler
-import monix.execution.schedulers.AsyncScheduler
-import org.http4s.multipart.Multipart
 import monix.nio.text.UTF8Codec._
 import monix.nio.file._
 import monix.execution.Scheduler.Implicits.global
@@ -28,8 +25,8 @@ import monix.reactive.{Observable, Pipe}
 import org.http4s.EntityBody
 import sttp.tapir.{CodecFormat, Schema, SchemaType}
 import scala.concurrent.ExecutionContext
-import scala.concurrent.duration._
 import scala.util.control.NonFatal
+import scala.concurrent.duration._
 
 /**
   * Created by Ilya Volynin on 16.12.2019 at 12:12.
@@ -90,14 +87,21 @@ case class HutsApi(http: Http, config: HutsConfig)(implicit sttpBackend: SttpBac
 
   private val streamingEndpoint = baseEndpoint.get
     .in(HutsPath / "stream")
-    .out(header[String]("Content-Disposition"))
-    .out(streamBody[EntityBody[Task]](schemaFor[Byte], CodecFormat.OctetStream()))
+    .out(header[String]("Accept-Ranges"))
+    .out(header[String]("Content-Range"))
+    .out(header[String]("Content-Length"))
+    .out(statusCode)
+    .out(streamBody[EntityBody[Task]](schemaFor[Byte], CodecFormat.TextPlain()))
     .serverLogic[Task] {
     _ =>
+      val size = 100
       (for {
-        r <- Stream.emit(List[Char]('a', 'b', 'c', 'd')).repeat.flatMap(list => Stream.chunk(Chunk.seq(list)))
-          .take(10000000).covary[Task].map(_.toByte).onFinalize(Task(logger.warn("stream finalized"))).pure[Task]
-          .map(s => ("attachment; filename=resp-stream-file.txt", s))
+        r <- Stream.emit(List[Char]('a', 'b', 'c', 'd')).
+          repeat.flatMap(list => Stream.chunk(Chunk.seq(list))).metered[Task](100.millis)
+          .take(size).covary[Task].map(_.toByte)
+          .onFinalize(Task(logger.warn("stream finalized")))
+          .pure[Task]
+          .map(s => ("bytes", s"bytes 0-$size/$size", s"$size", sttp.model.StatusCode.unsafeApply(206), s))
         _ <- Task.now(logger.warn("task finished working"))
       } yield r).toOut
   }
@@ -112,19 +116,18 @@ case class HutsApi(http: Http, config: HutsConfig)(implicit sttpBackend: SttpBac
     .out(streamBody[EntityBody[Task]](schemaFor[Byte], CodecFormat.OctetStream()))
     .serverLogic[Task] {
     file: String =>
-            io.file.exists[Task](streamReadFileBlocker,
-              Paths.get(s"${config.fileStorage.baseDir}/$file")
-            ).flatMap(
-              does =>
-                if (does)
-                  io.file.readAll[Task](
-                    Paths.get(s"${config.fileStorage.baseDir}/$file"),
-                    streamReadFileBlocker, 4096)
-                    .onFinalize(Task(logger.warn("file stream down finalized"))).pure[Task]
-                    .map(s => (s"attachment; filename=$file", s))
-                else
-                  Task.raiseError(Fail.NotFound(s"${config.fileStorage.baseDir}/$file"))
-            ).toOut
+      val fullPath = s"${config.fileStorage.baseDir}/$file"
+      io.file.exists[Task](streamReadFileBlocker,
+        Paths.get(fullPath)
+      ).flatMap(
+        does =>
+          if (does)
+            io.file.readAll[Task](Paths.get(fullPath), streamReadFileBlocker, 4096)
+              .onFinalize(Task(logger.warn("file stream down finalized"))).pure[Task]
+              .map(s => (s"attachment; filename=$file", s))
+          else
+            Task.raiseError(Fail.NotFound(s"$file"))
+      ).toOut
   }
 
   val endpoints: ServerEndpoints =
