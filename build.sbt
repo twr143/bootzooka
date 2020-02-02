@@ -2,8 +2,10 @@ import sbtbuildinfo.BuildInfoKey.action
 import sbtbuildinfo.BuildInfoKeys.{buildInfoKeys, buildInfoOptions, buildInfoPackage}
 import sbtbuildinfo.{BuildInfoKey, BuildInfoOption}
 import com.typesafe.sbt.packager.docker.ExecCmd
+
 import sbt._
 import Keys._
+
 import scala.util.Try
 import scala.sys.process.Process
 import complete.DefaultParsers._
@@ -12,15 +14,15 @@ val doobieVersion = "0.8.6"
 val http4sVersion = "0.21.0-M5"
 val circeVersion = "0.12.3"
 val tsecVersion = "0.1.0"
-val sttpVersion = "2.0.0-RC4"
-val prometheusVersion = "0.8.0"
-val tapirVersion = "0.12.7"
+val sttpVersion = "2.0.0-RC7"
+val prometheusVersion = "0.8.1"
+val tapirVersion = "0.12.19"
 
 val dbDependencies = Seq(
   "org.tpolecat" %% "doobie-core" % doobieVersion,
   "org.tpolecat" %% "doobie-hikari" % doobieVersion,
   "org.tpolecat" %% "doobie-postgres" % doobieVersion,
-  "org.flywaydb" % "flyway-core" % "6.1.0"
+  "org.flywaydb" % "flyway-core" % "6.2.1"
 )
 
 val httpDependencies = Seq(
@@ -57,20 +59,20 @@ val loggingDependencies = Seq(
 )
 
 val configDependencies = Seq(
-  "com.github.pureconfig" %% "pureconfig" % "0.12.1"
-).map(_.withSources())
+  "com.github.pureconfig" %% "pureconfig" % "0.12.2"
+)
 
 val baseDependencies = Seq(
   "io.monix" %% "monix" % "3.1.0",
   "com.softwaremill.common" %% "tagging" % "2.2.1",
   "com.softwaremill.quicklens" %% "quicklens" % "1.4.12"
-).map(_.withSources())
+)
 
 val apiDocsDependencies = Seq(
   "com.softwaremill.sttp.tapir" %% "tapir-openapi-docs" % tapirVersion,
   "com.softwaremill.sttp.tapir" %% "tapir-openapi-circe-yaml" % tapirVersion,
   "com.softwaremill.sttp.tapir" %% "tapir-swagger-ui-http4s" % tapirVersion
-).map(_.withSources())
+)
 
 val securityDependencies = Seq(
   "io.github.jmcardon" %% "tsec-password" % tsecVersion,
@@ -81,9 +83,6 @@ val emailDependencies = Seq(
   "com.sun.mail" % "javax.mail" % "1.6.2"
 )
 
-val fs2Deps = Seq(
-  "co.fs2" %% "fs2-reactive-streams" % "2.1.0"
-)
 val scalatest = "org.scalatest" %% "scalatest" % "3.0.8" % Test
 val unitTestingStack = Seq(scalatest)
 
@@ -111,9 +110,7 @@ lazy val commonSettings = commonSmlBuildSettings ++ Seq(
     val taskName = spaceDelimited("<arg>").parsed.mkString(" ")
     updateYarn.value
     val localYarnCommand = "yarn " + taskName
-
     def runYarnTask() = Process(localYarnCommand, uiDirectory.value).!
-
     streams.value.log("Running yarn task: " + taskName)
     haltOnCmdResultError(runYarnTask())
   },
@@ -147,8 +144,8 @@ lazy val fatJarSettings = Seq(
   assemblyJarName in assembly := "bootzooka.jar",
   assembly := assembly.dependsOn(copyWebapp).value,
   assemblyMergeStrategy in assembly := {
-    case PathList(ps@_*) if ps.last endsWith "io.netty.versions.properties" => MergeStrategy.first
-    case PathList(ps@_*) if ps.last endsWith "pom.properties" => MergeStrategy.first
+    case PathList(ps @ _*) if ps.last endsWith "io.netty.versions.properties" => MergeStrategy.first
+    case PathList(ps @ _*) if ps.last endsWith "pom.properties"               => MergeStrategy.first
     case x =>
       val oldStrategy = (assemblyMergeStrategy in assembly).value
       oldStrategy(x)
@@ -162,7 +159,7 @@ lazy val dockerSettings = Seq(
   dockerUsername := Some("softwaremill"),
   dockerCommands := {
     dockerCommands.value.flatMap {
-      case ep@ExecCmd("ENTRYPOINT", _*) =>
+      case ep @ ExecCmd("ENTRYPOINT", _*) =>
         Seq(
           ExecCmd("ENTRYPOINT", "/opt/docker/docker-entrypoint.sh" :: ep.args.toList: _*)
         )
