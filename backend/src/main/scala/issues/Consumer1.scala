@@ -43,7 +43,7 @@ object Consumer1 {
                   .evalTap[Task](message => Task { println(s"subscriber2: $message") }).map(_.some)
                   .unNoneTerminate.interruptWhen(stop.get.attempt)
 
-             val producer = kafkaConsumer.broadcastTo(topic.publish)
+             val producer = kafkaConsumer.through(topic.publish)
              val consumer = Stream.sleep_[Task](200.millis) ++ topic
                  .subscribe(10)
                  .showLinesStdOut

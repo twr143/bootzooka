@@ -31,17 +31,17 @@ object Stream1 {
     //    println(r)
     //    val s2 = Stream.range(100, 110).metered[Task](15.millis).covary[Task]
     //    val s3 = Stream(false,true).metered[Task](10.millis).covary[Task]
-//        val s1 = Stream.range(1, 10).metered[Task](10.millis).interruptWhen(s3).covary[Task]
+    //        val s1 = Stream.range(1, 10).metered[Task](10.millis).interruptWhen(s3).covary[Task]
     //
     //    s1.merge(s2).compile.toList.runSyncUnsafe()
-
-//    var border = 8
-//
-//    def flag(index: Long) = if (index < border) false else true
-//
-//    val res = Stream(false).repeat.zipWithIndex.map { pair => if (pair._2 == 3) border = 6; flag(pair._2) }.metered[Task](1000.millis).covary[Task].take(10).compile.toList.runSyncUnsafe()
-//    println(res)
-//    Stream.range(1,10).reduce(0)(_ + _).toList
-
+    //    var border = 8
+    //
+    //    def flag(index: Long) = if (index < border) false else true
+    //
+    //    val res = Stream(false).repeat.zipWithIndex.map { pair => if (pair._2 == 3) border = 6; flag(pair._2) }.metered[Task](1000.millis).covary[Task].take(10).compile.toList.runSyncUnsafe()
+    //    println(res)
+    //    Stream.range(1,10).reduce(0)(_ + _).toList
+    Stream.range(1, 10).zipWithIndex.map { case (x, y) => println(s"[$x,$y]") }
+    Stream.range(1, 10).zipWithIndex.map (x => println(s"[${x._1},${x._2}]"))
   }
 }

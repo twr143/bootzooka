@@ -5,7 +5,6 @@ import java.nio.file.{Files, Paths}
 import java.util.concurrent.Executors
 import cats.effect._
 import cats.data.NonEmptyList
-import cats.effect.ExitCase.{Completed, Error}
 import cats.implicits._
 import com.softwaremill.bootzooka.Fail
 import com.softwaremill.bootzooka.http.Http
@@ -20,8 +19,6 @@ import monix.execution.ExecutionModel.AlwaysAsyncExecution
 import monix.execution.Scheduler
 import monix.nio.text.UTF8Codec._
 import monix.nio.file._
-import monix.execution.Scheduler.Implicits.global
-import monix.reactive.{Observable, Pipe}
 import org.http4s.EntityBody
 import sttp.tapir.{CodecFormat, Schema, SchemaType}
 import scala.concurrent.ExecutionContext
