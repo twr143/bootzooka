@@ -83,6 +83,9 @@ val emailDependencies = Seq(
   "com.sun.mail" % "javax.mail" % "1.6.2"
 )
 
+val fs2Deps = Seq(
+  "co.fs2" %% "fs2-reactive-streams" % "2.1.0"
+)
 val scalatest = "org.scalatest" %% "scalatest" % "3.0.8" % Test
 val unitTestingStack = Seq(scalatest)
 
