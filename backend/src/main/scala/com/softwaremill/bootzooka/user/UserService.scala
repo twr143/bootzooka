@@ -11,7 +11,7 @@ import com.softwaremill.bootzooka.infrastructure.Doobie._
 import com.softwaremill.bootzooka.util._
 
 import scala.concurrent.duration.Duration
-import cats.data.ValidatedNec
+import cats.data.{NonEmptyList, ValidatedNec}
 import cats.implicits._
 
 import scala.collection.mutable.ArrayBuffer
@@ -58,7 +58,7 @@ class UserService(
     for {
       _ <- UserRegisterValidator
         .validate(login, email, password)
-        .fold(msg => Fail.IncorrectInputL(msg.foldLeft(List[String]())((l, v) =>  v.errorMessage :: l ))
+        .fold(msg => Fail.IncorrectInputL(msg.map(_.errorMessage).toList)
           .raiseError[ConnectionIO, Unit], _ => ().pure[ConnectionIO])
       _ <- checkUserDoesNotExist()
       apiKey <- doRegister()

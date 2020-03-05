@@ -121,7 +121,9 @@ lazy val commonSettings = commonSmlBuildSettings ++ Seq(
     streams.value.log.info("Copying the webapp resources")
     IO.copyDirectory(uiDirectory.value / "build", (classDirectory in Compile).value / "webapp")
   },
-  copyWebapp := copyWebapp.dependsOn(yarnTask.toTask(" build")).value
+  copyWebapp := copyWebapp.dependsOn(yarnTask.toTask(" build")).value,
+  cancelable in Global := true
+
 )
 
 lazy val buildInfoSettings = Seq(
@@ -220,5 +222,4 @@ lazy val ui = (project in file(uiProjectName))
   .settings(commonSettings)
   .settings(test in Test := (test in Test).dependsOn(yarnTask.toTask(" test:ci")).value)
   .settings(cleanFiles += baseDirectory.value / "build")
-
 RenameProject.settings
