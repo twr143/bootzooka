@@ -10,9 +10,8 @@ import monix.eval.Task
 import sttp.tapir.Codec.PlainCodec
 import sttp.tapir.json.circe.TapirJsonCirce
 import sttp.model.StatusCode
-import sttp.tapir.{Codec, CodecForMany, DecodeResult, Endpoint, EndpointInput, EndpointOutput, Schema, SchemaType, Tapir, header}
 import tsec.common.SecureRandomId
-
+import sttp.tapir._
 /**
   * Helper class for defining HTTP endpoints. Import the members of this class when defining an HTTP API using tapir.
   */
@@ -30,26 +29,12 @@ class Http() extends Tapir with TapirJsonCirce with TapirSchemas with StrictLogg
   val baseEndpoint: Endpoint[Unit, (StatusCode, Error_OUT), Unit, Nothing] =
     endpoint.errorOut(failOutput)
 
-  private def httpAuth2[T](authType: String, codec: PlainCodec[T]): EndpointInput.Auth.Http[T] =
-    EndpointInput.Auth.Http(authType, header[T]("Auth2")(CodecForMany.fromCodec(codec)))
-  private val BearerAuthType2 = "Bearer2"
-  private def credentialsCodec(authType: String): PlainCodec[String] = {
-      val authTypeWithSpace = authType + " "
-      val prefixLength = authTypeWithSpace.length
-      def removeAuthType(v: String): DecodeResult[String] =
-        if (v.startsWith(authType)) DecodeResult.Value(v.substring(prefixLength))
-        else DecodeResult.Error(v, new IllegalArgumentException(s"The given value doesn't start with $authType"))
-      Codec.stringPlainCodecUtf8.mapDecode(removeAuthType)(v => s"$authType $v")
-    }
-  val bearer2: EndpointInput.Auth.Http[String] = httpAuth2(BearerAuthType2, credentialsCodec(BearerAuthType2))
-
   /**
     * Base endpoint description for secured endpoints. Specifies that errors are always returned as JSON values
     * corresponding to the [[Error_OUT]] class, and that authentication is read from the `Authorization: Bearer` header.
     */
   val secureEndpoint: Endpoint[/*(Id,Id)*/Id, (StatusCode, Error_OUT), Unit, Nothing] =
-    baseEndpoint.in(auth.bearer.map(_.asInstanceOf[Id])(identity))//.in(bearer2.map(_.asInstanceOf[Id])(identity))
-
+    baseEndpoint.in(auth.bearer.map(_.asInstanceOf[Id])(identity))
   //
   private val InternalServerError = (StatusCode.InternalServerError, List("Internal server error"))
 
