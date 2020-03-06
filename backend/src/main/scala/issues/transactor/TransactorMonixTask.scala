@@ -4,9 +4,6 @@ import monix.eval.Task
 import monix.eval.instances.CatsConcurrentEffectForTask
 import monix.execution.Scheduler.Implicits.global
 
-import scala.concurrent.Await
-import scala.concurrent.duration.Duration
-
 /**
  * Created by Ilya Volynin on 05.03.2020 at 17:39.
  */object TransactorMonixTask extends App with Common {

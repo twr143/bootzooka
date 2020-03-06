@@ -1,8 +1,5 @@
 package issues
-import monix.eval.Task
 import fs2._
-import scala.concurrent.duration._
-import monix.execution.Scheduler.Implicits.global
 
 /**
   * Created by Ilya Volynin on 25.12.2019 at 15:28.

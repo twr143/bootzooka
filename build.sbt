@@ -101,7 +101,7 @@ lazy val yarnTask = inputKey[Unit]("Run yarn with arguments")
 lazy val copyWebapp = taskKey[Unit]("Copy webapp")
 
 lazy val commonSettings = commonSmlBuildSettings ++ Seq(
-  organization := "com.softwaremill.bootzooka",
+  organization := "iv",
   scalaVersion := "2.12.10",
   libraryDependencies ++= commonDependencies,
   uiDirectory := baseDirectory.value.getParentFile / uiProjectName,
@@ -141,7 +141,7 @@ lazy val buildInfoSettings = Seq(
   buildInfoOptions += BuildInfoOption.BuildTime,
   buildInfoOptions += BuildInfoOption.ToJson,
   buildInfoOptions += BuildInfoOption.ToMap,
-  buildInfoPackage := "com.softwaremill.bootzooka.version",
+  buildInfoPackage := "template.version",
   buildInfoObject := "BuildInfo"
 )
 
@@ -197,7 +197,7 @@ def now(): String = {
 lazy val rootProject = (project in file("."))
   .settings(commonSettings)
   .settings(
-    name := "bootzooka",
+    name := "teplateRestApi",
     herokuFatJar in Compile := Some((assemblyOutputPath in backend in assembly).value),
     deployHeroku in Compile := ((deployHeroku in Compile) dependsOn (assembly in backend)).value
   )
@@ -207,7 +207,7 @@ lazy val backend: Project = (project in file("backend"))
   .settings(
     libraryDependencies ++= dbDependencies ++ httpDependencies ++ jsonDependencies ++ apiDocsDependencies ++ monitoringDependencies
       ++ dbTestingStack ++ securityDependencies ++ emailDependencies ++ fs2Deps,
-    mainClass in Compile := Some("com.softwaremill.bootzooka.Main")
+    mainClass in Compile := Some("template.Main")
   )
   .enablePlugins(BuildInfoPlugin)
   .settings(commonSettings)

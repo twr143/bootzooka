@@ -1,5 +1,5 @@
 package issues
-import issues.Problem1.Names.{Ilya,Oleg,Sanya}
+import issues.Problem1.Names.Ilya
 
 /**
   * Created by Ilya Volynin on 23.12.2019 at 10:23.
@@ -7,16 +7,15 @@ import issues.Problem1.Names.{Ilya,Oleg,Sanya}
 object Problem1 extends App {
   import Names.Name
   import cats.effect.IO
-  import org.http4s.EntityBody
   import io.circe.Codec
   import io.circe.generic.extras.Configuration
   import io.circe.generic.extras.semiauto._
-  import sttp.tapir.server.ServerEndpoint
-  import sttp.tapir.Validator
-  import sttp.tapir.json.circe._
-  import sttp.tapir._
+  import org.http4s.EntityBody
+  import sttp.tapir.{Validator, _}
   import sttp.tapir.docs.openapi._
+  import sttp.tapir.json.circe._
   import sttp.tapir.openapi.circe.yaml._
+  import sttp.tapir.server.ServerEndpoint
 
   implicit val configuration: Configuration = Configuration.default.withDiscriminator("type")
 

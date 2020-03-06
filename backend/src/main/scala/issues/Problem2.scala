@@ -1,25 +1,13 @@
 package issues
 
-import scala.collection.mutable.ArrayBuffer
-
 /**
   * Created by Ilya Volynin on 06.01.2020 at 14:18.
   */
 object Problem2 extends App {
-  import cats.effect.IO
-    import org.http4s.EntityBody
-    import io.circe.Codec
-    import io.circe.generic.extras.Configuration
-    import io.circe.generic.extras.semiauto._
-    import sttp.tapir.server.ServerEndpoint
-    import sttp.tapir.Validator
-    import sttp.tapir.json.circe._
-    import sttp.tapir._
-    import sttp.tapir.docs.openapi._
-    import sttp.tapir.openapi.circe.yaml._
-  
+  import io.circe.generic.extras.Configuration
+
   implicit val configuration: Configuration = Configuration.default.withDefaults//.withDiscriminator("type")
-  
+
   sealed trait A
 
 //  object A {

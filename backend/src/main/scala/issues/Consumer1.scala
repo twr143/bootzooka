@@ -1,13 +1,13 @@
 package issues
 
-import cats.implicits._
 import cats.effect.concurrent.Deferred
-import monix.eval.Task
+import cats.implicits._
 import fs2._
 import fs2.concurrent.Topic
+import monix.eval.Task
+import monix.execution.Scheduler.Implicits.global
 
 import scala.concurrent.duration._
-import monix.execution.Scheduler.Implicits.global
 
 /**
   * Created by Ilya Volynin on 30.12.2019 at 16:56.
@@ -19,10 +19,10 @@ object Consumer1 {
        def yolo(): Unit = s.compile.drain.runSyncUnsafe()
        def yoloV: Vector[A] = s.compile.toVector.runSyncUnsafe()
      }
-   
+
      // put("hello").to[F]
      def put[A](a: A): Task[Unit] = Task.now(println(s"$a csubscribers connected"))
-   
+
      def prog1(): Unit =
        Stream
          .eval {
@@ -35,7 +35,7 @@ object Consumer1 {
                  .map(m => s"msg${m._2}")
                  .repeat
                  .take(3) ++ Stream.eval(stop.complete(())).drain
-   
+
              val subscribers = topic.subscribers.evalTap(put)
              val subscriber1           = topic.subscribe(5)
                .evalTap[Task](message => Task { println(s"subscriber1: $message") })
@@ -48,7 +48,7 @@ object Consumer1 {
                  .subscribe(10)
                  .showLinesStdOut
                  .interruptWhen(stop.get.attempt)
-   
+
              consumer concurrently Stream(
                producer,
                subscribers,

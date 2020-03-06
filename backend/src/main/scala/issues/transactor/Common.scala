@@ -1,11 +1,10 @@
 package issues.transactor
-import cats.implicits._
-import com.softwaremill.bootzooka.infrastructure.Doobie._
-import com.softwaremill.bootzooka.user.User
-import doobie.util.transactor.Transactor
 import cats.effect._
+import cats.implicits._
+import doobie.util.transactor.Transactor
 import model.Model2.MetroLine
-import model.TrackType._
+import template.infrastructure.Doobie._
+import template.user.User
 /**
  * Created by Ilya Volynin on 05.03.2020 at 17:27.
  */trait Common {
