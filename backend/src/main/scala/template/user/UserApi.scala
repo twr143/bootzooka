@@ -25,12 +25,6 @@ class UserApi(http: Http, auth: Auth[ApiKey], userService: UserService, xa: Tran
   import http._
 
   private val UserPath = "user"
-  val MinLoginLength = 3
-  private val emailRegex =
-    """^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$"""
-  val loginValidator = Validator.custom[Register_IN](_.login.length >= MinLoginLength, "VLogin is too short!")
-  val emailValidator = Validator.custom[Register_IN](_.email.matches(emailRegex), "VInvalid e-mail!")
-  val passwordValidator = Validator.custom[Register_IN](_.password.nonEmpty, "VPassword cannot be empty!")
 
   val registerUserK: Kleisli[Task, Register_IN, Register_OUT] = Kleisli {
     case data: Register_IN =>
@@ -42,7 +36,7 @@ class UserApi(http: Http, auth: Auth[ApiKey], userService: UserService, xa: Tran
 
   private val registerUserEndpoint = baseEndpoint.post
     .in(UserPath / "register")
-    .in(jsonBody[Register_IN] /*.validate(Validator.all(loginValidator,emailValidator,passwordValidator))*/ )
+    .in(jsonBody[Register_IN])
     .out(jsonBody[Register_OUT])
     .serverLogic[Task] ( registerUserK mapF toOutF[Register_OUT] run)
 
