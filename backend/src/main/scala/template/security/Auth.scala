@@ -25,13 +25,10 @@ class Auth[T](
   // see https://hackernoon.com/hack-how-to-use-securerandom-with-kubernetes-and-docker-a375945a7b21
   private val random = SecureRandom.getInstance("SHA1PRNG")
 
-  /**
-    * Authenticates using the given authentication token. If the token is invalid, a failed [[Task]] is returned,
-    * with an instance of the [[Fail]] class. Otherwise, the id of the authenticated user is given.
-    */
-  def apply(id: Id): Task[Id @@ User] = {
+  def checkTokenGetUserId(t: Product): Task[(Product, Id @@ User)] = {
+    val id = t.productIterator.next().asInstanceOf[Id].asId[T]
     val tokenOpt = (for {
-      token <- OptionT(authTokenOps.findById(id.asId[T]).transact(xa))
+      token <- OptionT(authTokenOps.findById(id).transact(xa))
       _ <- OptionT(verifyValid(token))
     } yield token).value
 
@@ -42,25 +39,7 @@ class Auth[T](
         Timer[Task].sleep(random.nextInt(1000).millis) >> Task.raiseError(Fail.UnauthorizedM(id))
       case Some(token) =>
         val delete = if (authTokenOps.deleteWhenValid) authTokenOps.delete(token).transact(xa) else Task.unit
-        delete >> Task.now(authTokenOps.userId(token))
-    }
-  }
-
-  def checkTokenGetUserId[S](t:S): Task[(S,Id@@User)] = {
-    val id =t.asInstanceOf[Product].productIterator.next().asInstanceOf[Id].asId[T]
-    val tokenOpt = (for {
-      token <- OptionT(authTokenOps.findById(id).transact(xa))
-      _ <- OptionT(verifyValid(token))
-    } yield token).value
-
-    tokenOpt.flatMap {
-      case None =>
-        logger.debug(s"Auth failed for: ${authTokenOps.tokenName} ${t.asInstanceOf[(Id,Any)]._1}")
-        // random sleep to prevent timing attacks
-        Timer[Task].sleep(random.nextInt(1000).millis) >> Task.raiseError(Fail.UnauthorizedM(t.asInstanceOf[(Id,Any)]._1))
-      case Some(token) =>
-        val delete = if (authTokenOps.deleteWhenValid) authTokenOps.delete(token).transact(xa) else Task.unit
-        delete >> Task.now((t,authTokenOps.userId(token)))
+        delete >> Task.now((t, authTokenOps.userId(token)))
     }
   }
 

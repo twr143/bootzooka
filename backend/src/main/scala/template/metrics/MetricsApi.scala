@@ -2,6 +2,7 @@ package template.metrics
 
 import java.io.StringWriter
 
+import cats.data.Kleisli
 import io.prometheus.client.CollectorRegistry
 import io.prometheus.client.exporter.common.TextFormat
 import monix.eval.Task
@@ -15,14 +16,15 @@ import template.http.{Error_OUT, Http}
 class MetricsApi(http: Http, registry: CollectorRegistry) {
   import http._
 
+  val metricsK: Kleisli[Task, Unit, String] = Kleisli { _ =>
+    Task {
+      val writer = new StringWriter
+      TextFormat.write004(writer, registry.metricFamilySamples)
+      writer.toString
+    }
+  }
   val metricsEndpoint: ServerEndpoint[Unit, (StatusCode, Error_OUT), String, Nothing, Task] = baseEndpoint.get
     .in("metrics")
     .out(stringBody)
-    .serverLogic { _ =>
-      Task {
-        val writer = new StringWriter
-        TextFormat.write004(writer, registry.metricFamilySamples)
-        writer.toString
-      }.toOut
-    }
+    .serverLogic(metricsK mapF toOutF run)
 }

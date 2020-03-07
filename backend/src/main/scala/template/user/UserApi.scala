@@ -38,7 +38,7 @@ class UserApi(http: Http, auth: Auth[ApiKey], userService: UserService, xa: Tran
     .in(UserPath / "register")
     .in(jsonBody[Register_IN])
     .out(jsonBody[Register_OUT])
-    .serverLogic[Task] ( registerUserK mapF toOutF[Register_OUT] run)
+    .serverLogic[Task] ( registerUserK mapF toOutF run)
 
   val loginK: Kleisli[Task, Login_IN, Login_OUT] = Kleisli {
     case data: Login_IN =>
@@ -53,7 +53,7 @@ class UserApi(http: Http, auth: Auth[ApiKey], userService: UserService, xa: Tran
     .in(UserPath / "login")
     .in(jsonBody[Login_IN])
     .out(jsonBody[Login_OUT])
-    .serverLogic[Task](loginK mapF toOutF[Login_OUT] run)
+    .serverLogic[Task](loginK mapF toOutF run)
 
   val changePasswordK: Kleisli[Task, (Product, Id @@ User), ChangePassword_OUT] = Kleisli {
     case ((_, data: ChangePassword_IN), userId) =>
@@ -66,7 +66,7 @@ class UserApi(http: Http, auth: Auth[ApiKey], userService: UserService, xa: Tran
     .in(UserPath / "changepassword")
     .in(jsonBody[ChangePassword_IN])
     .out(jsonBody[ChangePassword_OUT])
-    .serverLogic[Task](auth.checkUser andThen changePasswordK mapF toOutF[ChangePassword_OUT] run)
+    .serverLogic[Task](auth.checkUser andThen changePasswordK mapF toOutF run)
 
   val getUserK: Kleisli[Task, (Product, Id @@ User), GetUser_OUT] = Kleisli {
     case (_, userId) =>
@@ -79,7 +79,7 @@ class UserApi(http: Http, auth: Auth[ApiKey], userService: UserService, xa: Tran
   private val getUserEndpoint = secureEndpoint.get
     .in(UserPath)
     .out(jsonBody[GetUser_OUT])
-    .serverLogic[Task](IdToProductK andThen auth.checkUser andThen getUserK mapF toOutF[GetUser_OUT] run)
+    .serverLogic[Task](IdToProductK andThen auth.checkUser andThen getUserK mapF toOutF run)
 
   val updateK: Kleisli[Task, (Product, Id @@ User), UpdateUser_OUT] = Kleisli {
     case ((_, data: UpdateUser_IN), userId) =>
@@ -92,7 +92,7 @@ class UserApi(http: Http, auth: Auth[ApiKey], userService: UserService, xa: Tran
     .in(UserPath)
     .in(jsonBody[UpdateUser_IN])
     .out(jsonBody[UpdateUser_OUT])
-    .serverLogic[Task](auth.checkUser andThen updateK mapF toOutF[UpdateUser_OUT] run)
+    .serverLogic[Task](auth.checkUser andThen updateK mapF toOutF run)
 
   val endpoints: ServerEndpoints =
     NonEmptyList

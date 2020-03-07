@@ -5,4 +5,4 @@ package template.huts
   */
 case class FileStorage(baseDir: String)
 
-case class HutsConfig(url: String, fileStorage: FileStorage)
+case class FSConfig(url: String, fileStorage: FileStorage)

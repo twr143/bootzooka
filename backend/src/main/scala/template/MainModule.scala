@@ -6,7 +6,7 @@ import cats.data.NonEmptyList
 import monix.eval.Task
 import template.email.EmailModule
 import template.http.{Http, HttpApi}
-import template.huts.HutsModule
+import template.huts.FilesRetrievalModule
 import template.infrastructure.InfrastructureModule
 import template.metrics.MetricsModule
 import template.passwordreset.PasswordResetModule
@@ -24,14 +24,14 @@ trait MainModule
     with PasswordResetModule
     with MetricsModule
     with InfrastructureModule
-    with HutsModule {
+    with FilesRetrievalModule {
 
   override lazy val idGenerator: IdGenerator = DefaultIdGenerator
   override lazy val clock: Clock = Clock.systemUTC()
 
   lazy val http: Http = new Http()
 
-  private lazy val endpoints: ServerEndpoints = userApi.endpoints concatNel passwordResetApi.endpoints concatNel hutsApi.endpoints
+  private lazy val endpoints: ServerEndpoints = userApi.endpoints concatNel passwordResetApi.endpoints concatNel fsApi.endpoints
   private lazy val adminEndpoints: ServerEndpoints = NonEmptyList.of(metricsApi.metricsEndpoint, versionApi.versionEndpoint)
 
   lazy val httpApi: HttpApi = new HttpApi(http, endpoints, adminEndpoints, collectorRegistry, config.api)

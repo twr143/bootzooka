@@ -7,9 +7,9 @@ import template.util.BaseModule
 /**
   * Created by Ilya Volynin on 16.12.2019 at 13:36.
   */
-trait HutsModule extends BaseModule{
+trait FilesRetrievalModule extends BaseModule{
   def http: Http
-  lazy val hutsApi = HutsApi(http, config = config.hutsService)(sttpBackend)
+  lazy val fsApi = FileStreamingApi(http, config = config.fsService)(sttpBackend)
   def sttpBackend: SttpBackend[Task, Nothing, Nothing]
 
 }

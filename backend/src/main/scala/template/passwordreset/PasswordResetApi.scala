@@ -1,6 +1,6 @@
 package template.passwordreset
 
-import cats.data.NonEmptyList
+import cats.data.{Kleisli, NonEmptyList}
 import doobie.util.transactor.Transactor
 import monix.eval.Task
 import template.http.Http
@@ -15,25 +15,28 @@ class PasswordResetApi(http: Http, passwordResetService: PasswordResetService, x
 
   private val PasswordResetPath = "passwordreset"
 
+  val pResetK: Kleisli[Task, PasswordReset_IN, PasswordReset_OUT] = Kleisli { data =>
+    for {
+      _ <- passwordResetService.resetPassword(data.code, data.password)
+    } yield PasswordReset_OUT()
+  }
   private val passwordResetEndpoint = baseEndpoint.post
     .in(PasswordResetPath / "reset")
     .in(jsonBody[PasswordReset_IN])
     .out(jsonBody[PasswordReset_OUT])
-    .serverLogic[Task] { data =>
-      (for {
-        _ <- passwordResetService.resetPassword(data.code, data.password)
-      } yield PasswordReset_OUT()).toOut
-    }
+    .serverLogic[Task](pResetK mapF toOutF run)
+
+  val forgotPK: Kleisli[Task, ForgotPassword_IN, ForgotPassword_OUT] = Kleisli { data =>
+    for {
+      _ <- passwordResetService.forgotPassword(data.loginOrEmail).transact(xa)
+    } yield ForgotPassword_OUT()
+  }
 
   private val forgotPasswordEndpoint = baseEndpoint.post
     .in(PasswordResetPath / "forgot")
     .in(jsonBody[ForgotPassword_IN])
     .out(jsonBody[ForgotPassword_OUT])
-    .serverLogic[Task] { data =>
-      (for {
-        _ <- passwordResetService.forgotPassword(data.loginOrEmail).transact(xa)
-      } yield ForgotPassword_OUT()).toOut
-    }
+    .serverLogic[Task] (forgotPK mapF toOutF run)
 
   val endpoints: ServerEndpoints =
     NonEmptyList

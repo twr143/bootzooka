@@ -4,7 +4,7 @@ import java.io.File
 import java.nio.file.{Files, Paths}
 import java.util.concurrent.Executors
 
-import cats.data.NonEmptyList
+import cats.data.{Kleisli, NonEmptyList}
 import cats.effect._
 import cats.implicits._
 import com.typesafe.scalalogging.StrictLogging
@@ -29,25 +29,26 @@ import template.util.SttpUtils._
 /**
   * Created by Ilya Volynin on 16.12.2019 at 12:12.
   */
-case class HutsApi(http: Http, config: HutsConfig)(implicit sttpBackend: SttpBackend[Task, Nothing, Nothing]) extends StrictLogging {
-  import HutsApi._
+case class FileStreamingApi(http: Http, config: FSConfig)(implicit sttpBackend: SttpBackend[Task, Nothing, Nothing]) extends StrictLogging {
+  import FileStreamingApi._
   import http._
 
   private val HutsPath = "huts"
 
+  val samplesK: Kleisli[Task, Samples_IN, Samples_OUT] = Kleisli {
+    data =>  for {
+            r <- basicRequest
+              .post(uri"${config.url}")
+              .body(Samples_Body_Call(data.id).asJson.toString())
+              .send()
+              .flatMap(handleRemoteResponse[List[HutWithId]])
+          } yield Samples_OUT(r)
+  }
   private val samplesEndpoint = baseEndpoint.post
     .in(HutsPath / "samples")
     .in(jsonBody[Samples_IN])
     .out(jsonBody[Samples_OUT])
-    .serverLogic[Task] { data =>
-      (for {
-        r <- basicRequest
-          .post(uri"${config.url}")
-          .body(Samples_Body_Call(data.id).asJson.toString())
-          .send()
-          .flatMap(handleRemoteResponse[List[HutWithId]])
-      } yield Samples_OUT(r)).toOut
-    }
+    .serverLogic[Task] (samplesK mapF toOutF run)
 
   private val readFileBlocker = Executors.newFixedThreadPool(4)
 
@@ -141,7 +142,7 @@ case class HutsApi(http: Http, config: HutsConfig)(implicit sttpBackend: SttpBac
       .map(_.tag("huts"))
 }
 
-object HutsApi {
+object FileStreamingApi {
 
   case class Samples_IN(id: String)
 

@@ -23,7 +23,7 @@ trait ConfigModule extends StrictLogging {
                    |Email:          ${config.email}
                    |Password reset: ${config.passwordReset}
                    |User:           ${config.user}
-                   |Huts:           ${config.hutsService}
+                   |Huts:           ${config.fsService}
 
                    |Build & env info:
                    |-----------------
