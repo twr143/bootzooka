@@ -1,5 +1,6 @@
 package template.http
 
+import cats.data.Kleisli
 import cats.implicits._
 import template._
 import template.infrastructure.Json._
@@ -15,6 +16,7 @@ import sttp.tapir.json.circe.TapirJsonCirce
 import template.Fail
 import template.infrastructure.Json._
 import tsec.common.SecureRandomId
+
 /**
   * Helper class for defining HTTP endpoints. Import the members of this class when defining an HTTP API using tapir.
   */
@@ -23,7 +25,8 @@ class Http() extends Tapir with TapirJsonCirce with TapirSchemas with StrictLogg
   /**
     * Description of the output, that is used to represent an error that occurred during endpoint invocation.
     */
-  val failOutput: EndpointOutput[(StatusCode, Error_OUT)] = statusCode and jsonBody[Error_OUT]//.map(identity)(a => Error_OUT(a.error + " 123"))
+  val failOutput
+      : EndpointOutput[(StatusCode, Error_OUT)] = statusCode and jsonBody[Error_OUT] //.map(identity)(a => Error_OUT(a.error + " 123"))
 
   /**
     * Base endpoint description for non-secured endpoints. Specifies that errors are always returned as JSON values
@@ -36,20 +39,20 @@ class Http() extends Tapir with TapirJsonCirce with TapirSchemas with StrictLogg
     * Base endpoint description for secured endpoints. Specifies that errors are always returned as JSON values
     * corresponding to the [[Error_OUT]] class, and that authentication is read from the `Authorization: Bearer` header.
     */
-  val secureEndpoint: Endpoint[/*(Id,Id)*/Id, (StatusCode, Error_OUT), Unit, Nothing] =
+  val secureEndpoint: Endpoint[ /*(Id,Id)*/ Id, (StatusCode, Error_OUT), Unit, Nothing] =
     baseEndpoint.in(auth.bearer.map(_.asInstanceOf[Id])(identity))
   //
   private val InternalServerError = (StatusCode.InternalServerError, List("Internal server error"))
 
   private val failToResponseData: Fail => (StatusCode, List[String]) = {
-    case Fail.NotFound(what) => (StatusCode.NotFound, List(what))
-    case Fail.Conflict(msg) => (StatusCode.Conflict, List(msg))
-    case Fail.IncorrectInput(msg) => (StatusCode.BadRequest, List(msg))
+    case Fail.NotFound(what)        => (StatusCode.NotFound, List(what))
+    case Fail.Conflict(msg)         => (StatusCode.Conflict, List(msg))
+    case Fail.IncorrectInput(msg)   => (StatusCode.BadRequest, List(msg))
     case Fail.IncorrectInputL(lmsg) => (StatusCode.BadRequest, lmsg)
-    case Fail.Forbidden => (StatusCode.Forbidden, List("Forbidden"))
-    case Fail.Unauthorized => (StatusCode.Unauthorized, List("Unauthorized"))
-    case Fail.UnauthorizedM(msg) => (StatusCode.Unauthorized,List(msg))
-    case _ => InternalServerError
+    case Fail.Forbidden             => (StatusCode.Forbidden, List("Forbidden"))
+    case Fail.Unauthorized          => (StatusCode.Unauthorized, List("Unauthorized"))
+    case Fail.UnauthorizedM(msg)    => (StatusCode.Unauthorized, List(msg))
+    case _                          => InternalServerError
   }
 
   def exceptionToErrorOut(e: Exception): (StatusCode, Error_OUT) = {
@@ -77,6 +80,12 @@ class Http() extends Tapir with TapirJsonCirce with TapirSchemas with StrictLogg
       }
     }
   }
+  def toOutF[T]: Task[T] => Task[Either[(StatusCode, Error_OUT), T]] = { f =>
+    f.map(t => t.asRight[(StatusCode, Error_OUT)]).recover {
+      case e: Exception => exceptionToErrorOut(e).asLeft[T]
+    }
+  }
+
 
   override def jsonPrinter: Printer = noNullsPrinter
 }

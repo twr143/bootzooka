@@ -59,8 +59,10 @@ class UserService(
     for {
       _ <- UserRegisterValidator
         .validate(login, email, password)
-        .fold(msg => Fail.IncorrectInputL(msg.map(_.errorMessage).toList)
-          .raiseError[ConnectionIO, Unit], _ => ().pure[ConnectionIO])
+        .fold(msg => {
+          Fail.IncorrectInputL(msg.map(_.errorMessage).toList)
+            .raiseError[ConnectionIO, Unit]
+        }, _ => ().pure[ConnectionIO])
       _ <- checkUserDoesNotExist()
       apiKey <- doRegister()
     } yield apiKey

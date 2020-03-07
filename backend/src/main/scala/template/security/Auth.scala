@@ -3,7 +3,7 @@ package template.security
 import java.security.SecureRandom
 import java.time.{Clock, Instant}
 
-import cats.data.OptionT
+import cats.data.{Kleisli, OptionT}
 import cats.effect.Timer
 import com.softwaremill.tagging._
 import com.typesafe.scalalogging.StrictLogging
@@ -14,6 +14,7 @@ import template.user.User
 import template.util._
 
 import scala.concurrent.duration._
+//import cats.implicits._
 
 class Auth[T](
     authTokenOps: AuthTokenOps[T],
@@ -44,6 +45,26 @@ class Auth[T](
         delete >> Task.now(authTokenOps.userId(token))
     }
   }
+
+  def checkTokenGetUserId[S](t:S): Task[(S,Id@@User)] = {
+    val id =t.asInstanceOf[Product].productIterator.next().asInstanceOf[Id].asId[T]
+    val tokenOpt = (for {
+      token <- OptionT(authTokenOps.findById(id).transact(xa))
+      _ <- OptionT(verifyValid(token))
+    } yield token).value
+
+    tokenOpt.flatMap {
+      case None =>
+        logger.debug(s"Auth failed for: ${authTokenOps.tokenName} ${t.asInstanceOf[(Id,Any)]._1}")
+        // random sleep to prevent timing attacks
+        Timer[Task].sleep(random.nextInt(1000).millis) >> Task.raiseError(Fail.UnauthorizedM(t.asInstanceOf[(Id,Any)]._1))
+      case Some(token) =>
+        val delete = if (authTokenOps.deleteWhenValid) authTokenOps.delete(token).transact(xa) else Task.unit
+        delete >> Task.now((t,authTokenOps.userId(token)))
+    }
+  }
+
+  val checkUser: Kleisli[Task, Product, (Product, Id @@ User)] = Kleisli(checkTokenGetUserId)
 
   private def verifyValid(token: T): Task[Option[Unit]] = {
     if (clock.instant().isAfter(authTokenOps.validUntil(token))) {
