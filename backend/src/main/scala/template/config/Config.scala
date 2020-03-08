@@ -2,7 +2,7 @@ package template.config
 
 import template.email.EmailConfig
 import template.http.HttpConfig
-import template.huts.FSConfig
+import template.fileRetrieval.FSConfig
 import template.infrastructure.DBConfig
 import template.passwordreset.PasswordResetConfig
 import template.user.UserConfig

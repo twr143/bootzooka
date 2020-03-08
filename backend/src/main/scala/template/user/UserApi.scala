@@ -15,9 +15,7 @@ import template.security._
 import template.util.LowerCased
 import template.infrastructure.Json._
 import template.infrastructure.Doobie._
-import org.http4s.syntax.kleisli._
-import sttp.model.StatusCode
-
+import template.util.IdUtils._
 import scala.concurrent.duration._
 
 class UserApi(http: Http, auth: Auth[ApiKey], userService: UserService, xa: Transactor[Task]) {
@@ -74,7 +72,6 @@ class UserApi(http: Http, auth: Auth[ApiKey], userService: UserService, xa: Tran
         user <- userService.findById(userId).transact(xa)
       } yield GetUser_OUT(user.login, user.emailLowerCased, user.createdOn)
   }
-  def IdToProductK: Kleisli[Task, Id, Product] = Kleisli(id => Task.now(new Tuple1[Id](id)))
 
   private val getUserEndpoint = secureEndpoint.get
     .in(UserPath)

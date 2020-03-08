@@ -6,7 +6,7 @@ import cats.data.NonEmptyList
 import monix.eval.Task
 import template.email.EmailModule
 import template.http.{Http, HttpApi}
-import template.huts.FilesRetrievalModule
+import template.fileRetrieval.FilesRetrievalModule
 import template.infrastructure.InfrastructureModule
 import template.metrics.MetricsModule
 import template.passwordreset.PasswordResetModule

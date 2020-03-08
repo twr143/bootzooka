@@ -67,19 +67,6 @@ class Http() extends Tapir with TapirJsonCirce with TapirSchemas with StrictLogg
     (statusCode, errorOut)
   }
 
-  //
-  implicit class TaskOut[T](f: Task[T]) {
-
-    /**
-      * An extension method for [[Task]], which converts a possibly failed task, to a task which either returns
-      * the error converted to an [[Error_OUT]] instance, or returns the successful value unchanged.
-      */
-    def toOut: Task[Either[(StatusCode, Error_OUT), T]] = {
-      f.map(t => t.asRight[(StatusCode, Error_OUT)]).recover {
-        case e: Exception => exceptionToErrorOut(e).asLeft[T]
-      }
-    }
-  }
   def toOutF[T]: Task[T] => Task[Either[(StatusCode, Error_OUT), T]] = { f =>
     f.map(t => t.asRight[(StatusCode, Error_OUT)]).recover {
       case e: Exception => exceptionToErrorOut(e).asLeft[T]
