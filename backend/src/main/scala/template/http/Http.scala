@@ -1,6 +1,5 @@
 package template.http
 
-import cats.data.Kleisli
 import cats.implicits._
 import template._
 import template.infrastructure.Json._

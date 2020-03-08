@@ -1,5 +1,4 @@
 package template
-import template.http.Http
 
 /**
   * Base class for all failures in the application. The failures are translated to HTTP API results in the

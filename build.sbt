@@ -122,8 +122,12 @@ lazy val commonSettings = commonSmlBuildSettings ++ Seq(
     IO.copyDirectory(uiDirectory.value / "build", (classDirectory in Compile).value / "webapp")
   },
   copyWebapp := copyWebapp.dependsOn(yarnTask.toTask(" build")).value,
-  cancelable in Global := true
-
+  cancelable in Global := true,
+    addCompilerPlugin(scalafixSemanticdb), // enable SemanticDB
+       scalacOptions ++= List(
+        "-Yrangepos",          // required by SemanticDB compiler plugin
+        "-Ywarn-unused-import" // required by `RemoveUnused` rule
+       )
 )
 
 lazy val buildInfoSettings = Seq(

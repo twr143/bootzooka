@@ -2,14 +2,12 @@ package template.user
 
 import java.time.Instant
 
-import cats.implicits._
 import template.util._
 import cats.data.{Kleisli, NonEmptyList}
 import com.softwaremill.tagging.@@
 import doobie.util.transactor.Transactor
 import monix.eval.Task
-import sttp.tapir.Validator
-import template.http.{Error_OUT, Http}
+import template.http.Http
 import template.metrics.Metrics
 import template.security._
 import template.util.LowerCased

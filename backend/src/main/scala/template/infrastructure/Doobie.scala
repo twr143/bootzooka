@@ -35,7 +35,7 @@ object Doobie
   implicit val passwordHashMeta: Meta[PasswordHash[SCrypt]] =
     implicitly[Meta[String]].asInstanceOf[Meta[PasswordHash[SCrypt]]]
 
-  private val SlowThreshold = 200.millis
+  200.millis
 
   /**
     * Logs the SQL queries which are slow or end up in an exception.

@@ -4,7 +4,7 @@ import io.circe.Decoder
 import monix.eval.Task
 import sttp.client.Response
 import io.circe.parser.decode
-import com.typesafe.scalalogging.{Logger, StrictLogging}
+import com.typesafe.scalalogging.StrictLogging
 import template.Fail
 import template.Fail._
 

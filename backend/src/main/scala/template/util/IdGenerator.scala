@@ -2,9 +2,7 @@ package template.util
 
 import java.util.UUID
 
-import cats.data.Kleisli
 import com.softwaremill.tagging._
-import monix.eval.Task
 
 trait IdGenerator {
   def nextId[U](): Id @@ U

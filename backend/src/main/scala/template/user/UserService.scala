@@ -13,7 +13,7 @@ import template.infrastructure.Doobie._
 import template.util._
 
 import scala.concurrent.duration.Duration
-import cats.data.{NonEmptyList, ValidatedNec}
+import cats.data.ValidatedNec
 import cats.implicits._
 
 
@@ -129,7 +129,7 @@ class UserService(
 
 object UserRegisterValidator {
 
-  private val ValidationOk = Right(())
+  Right(())
 
   val MinLoginLength = 3
 
