@@ -40,7 +40,7 @@ case class FileStreamingApi(http: Http, auth: Auth[ApiKey], config: FSConfig)(im
   import FileStreamingApi._
   import http._
 
-  private val HutsPath = "huts"
+  private val fsPath = "fs"
 
   val samplesK: Kleisli[Task, Samples_IN, Samples_OUT] = Kleisli { data =>
     for {
@@ -52,7 +52,7 @@ case class FileStreamingApi(http: Http, auth: Auth[ApiKey], config: FSConfig)(im
     } yield Samples_OUT(r)
   }
   private val samplesEndpoint = baseEndpoint.post
-    .in(HutsPath / "samples")
+    .in(fsPath / "samples")
     .in(jsonBody[Samples_IN])
     .out(jsonBody[Samples_OUT])
     .serverLogic[Task](samplesK mapF toOutF run)
@@ -71,7 +71,7 @@ case class FileStreamingApi(http: Http, auth: Auth[ApiKey], config: FSConfig)(im
   }
 
   private val fileUploadEndpoint = secureEndpoint.post
-    .in(HutsPath / "fu")
+    .in(fsPath / "fu")
     .in(multipartBody[HutBook])
     .out(jsonBody[HutBook_OUT])
     .serverLogic[Task](auth.checkUser andThen fileUploadK mapF toOutF run)
@@ -82,7 +82,7 @@ case class FileStreamingApi(http: Http, auth: Auth[ApiKey], config: FSConfig)(im
     } yield r
   }
   private val fileRetrievalEndpoint = secureEndpoint.get
-    .in(HutsPath / "fr")
+    .in(fsPath / "fr")
     //    .in(jsonBody[HutFile_IN])
     .out(header[String]("Content-Disposition"))
     .out(header[String]("Content-Type"))
@@ -109,7 +109,7 @@ case class FileStreamingApi(http: Http, auth: Auth[ApiKey], config: FSConfig)(im
     } yield r
   }
   private val streamingEndpoint = baseEndpoint.get
-    .in(HutsPath / "stream")
+    .in(fsPath / "stream")
     .out(header[String]("Accept-Ranges"))
     .out(header[String]("Content-Range"))
     .out(header[String]("Content-Length"))
@@ -136,7 +136,7 @@ case class FileStreamingApi(http: Http, auth: Auth[ApiKey], config: FSConfig)(im
             )
   }
   private val streamingFileEndpoint = baseEndpoint.get
-    .in(HutsPath / "streamfile")
+    .in(fsPath / "streamfile")
     .in(query[String]("file"))
     .out(header[String]("Content-Disposition"))
     .out(streamBody[EntityBody[Task]](schemaFor[Byte], CodecFormat.OctetStream()))
