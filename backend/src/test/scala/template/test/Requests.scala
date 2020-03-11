@@ -1,8 +1,8 @@
 package template.test
 
-import com.softwaremill.bootzooka.MainModule
-import com.softwaremill.bootzooka.infrastructure.Json._
-import com.softwaremill.bootzooka.user.UserApi._
+import template.MainModule
+import template.infrastructure.Json._
+import template.user.UserApi._
 import monix.eval.Task
 import org.http4s._
 import org.http4s.syntax.all._

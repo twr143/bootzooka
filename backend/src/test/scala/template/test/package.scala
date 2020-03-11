@@ -1,6 +1,6 @@
 package template
 
-import com.softwaremill.bootzooka.config.{Config, ConfigModule}
+import template.config.{Config, ConfigModule}
 import com.softwaremill.quicklens._
 
 import scala.concurrent.duration._

@@ -2,9 +2,9 @@ package template.test
 
 import cats.data.OptionT
 import cats.effect.Sync
-import com.softwaremill.bootzooka.MainModule
-import com.softwaremill.bootzooka.http.Error_OUT
-import com.softwaremill.bootzooka.infrastructure.Json._
+import template.MainModule
+import template.http.Error_OUT
+import template.infrastructure.Json._
 import io.circe.{Decoder, Encoder}
 import monix.eval.Task
 import monix.execution.Scheduler.Implicits.global
@@ -56,7 +56,7 @@ trait HttpTestSupport extends Http4sDsl[Task] {
       }
     }
 
-    def shouldDeserializeToError: String = {
+    def shouldDeserializeToError: List[String] = {
       val attemptResult = r.attemptAs[Error_OUT].value.unwrap
       attemptResult match {
         case Left(df) => fail(s"Cannot deserialize to error:\n$df")

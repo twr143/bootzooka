@@ -4,6 +4,9 @@ grant all on database "bootzooka" to bz_user;
 psql -d bootzooka -U bz_user;
 --create schema schema1;
 
+create database restapitest --encoding='utf-8';
+grant all on database "restapitest" to bz_user;
+
  create database emp_dep --encoding='utf-8';;
  create user emp_dep_user with password '123';;
 grant all on database "emp_dep" to bz_user;

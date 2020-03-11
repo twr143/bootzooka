@@ -1,8 +1,8 @@
 package template.test
 
 import cats.effect.{Blocker, ContextShift}
-import com.softwaremill.bootzooka.infrastructure.DBConfig
-import com.softwaremill.bootzooka.infrastructure.Doobie._
+import template.infrastructure.DBConfig
+import template.infrastructure.Doobie._
 import com.typesafe.scalalogging.StrictLogging
 import doobie.hikari.HikariTransactor
 import monix.catnap.MVar

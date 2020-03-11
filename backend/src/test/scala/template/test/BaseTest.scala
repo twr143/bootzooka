@@ -1,6 +1,6 @@
 package template.test
 
-import com.softwaremill.bootzooka.infrastructure.CorrelationId
+import template.infrastructure.CorrelationId
 import org.scalatest.{FlatSpec, Matchers}
 import template.infrastructure.CorrelationId
 

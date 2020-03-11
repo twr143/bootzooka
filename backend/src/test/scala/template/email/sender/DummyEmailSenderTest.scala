@@ -1,7 +1,7 @@
 package template.email.sender
 
-import com.softwaremill.bootzooka.email.EmailData
-import com.softwaremill.bootzooka.test.BaseTest
+import template.email.EmailData
+import template.test.BaseTest
 import monix.execution.Scheduler.Implicits.global
 import template.test.BaseTest
 
