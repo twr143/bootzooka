@@ -42,7 +42,6 @@ class PasswordResetApiTest extends BaseTest with TestEmbeddedPostgres with Event
     val code = eventually { codeSentToEmail(email) }
 
     // when
-    logger.warn("l e code: {} {} {}", login, email,code)
     val response2 = resetPassword(code, newPassword)
     response2.shouldDeserializeTo[PasswordReset_OUT]
 

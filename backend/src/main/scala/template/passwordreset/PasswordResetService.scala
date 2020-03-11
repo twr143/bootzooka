@@ -35,10 +35,8 @@ class PasswordResetService(
   }
 
   private def createCode(user: User): ConnectionIO[PasswordResetCode] = {
-    logger.warn(s"Creating password reset code for user: ${user.id}")
     val validUntil = clock.instant().plus(config.codeValid.toMinutes, ChronoUnit.MINUTES)
     val code = PasswordResetCode(idGenerator.nextId[PasswordResetCode](), user.id, validUntil)
-    logger.warn(s"Created password reset code for user: ${user.id}, {}", code)
     passwordResetCodeModel.insert(code).map(_ => code)
   }
 
@@ -53,7 +51,6 @@ class PasswordResetService(
   }
 
   def resetPassword(code: String, newPassword: String): Task[Unit] = {
-    logger.warn("reset password code = {}, newpassword {}", code, newPassword)
     for {
       userId <- auth.checkUser(Tuple1(code.asInstanceOf[Id])).map(_._2)
       _ = logger.debug(s"Resetting password for user: $userId")

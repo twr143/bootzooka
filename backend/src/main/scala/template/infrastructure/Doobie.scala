@@ -35,16 +35,16 @@ object Doobie
   implicit val passwordHashMeta: Meta[PasswordHash[SCrypt]] =
     implicitly[Meta[String]].asInstanceOf[Meta[PasswordHash[SCrypt]]]
 
-  200.millis
+  val SlowThreshold = 200.millis
 
   /**
     * Logs the SQL queries which are slow or end up in an exception.
     */
   implicit val doobieLogHandler: LogHandler = LogHandler {
     case Success(sql, _, exec, processing) =>
-//      if (exec > SlowThreshold || processing > SlowThreshold) {
+      if (exec > SlowThreshold || processing > SlowThreshold) {
         logger.warn(s"(Slow) query (execution: ${exec.toMillis}, processing: ${processing.toMillis}): $sql")
-//      }
+      }
     case ProcessingFailure(sql, args, exec, processing, failure) =>
       logger.error(s"Processing failure (execution: $exec, processing: $processing): $sql | args: $args", failure)
     case ExecFailure(sql, args, exec, failure) =>

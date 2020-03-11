@@ -61,7 +61,6 @@ class Http() extends Tapir with TapirJsonCirce with TapirSchemas with StrictLogg
         logger.error("Exception when processing request", e)
         InternalServerError
     }
-    logger.warn(s"Request fail: $message")
     val errorOut = Error_OUT(message)
     (statusCode, errorOut)
   }

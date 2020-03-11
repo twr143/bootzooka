@@ -27,7 +27,6 @@ class Auth[T](
 
   def checkTokenGetUserId(t: Product): Task[(Product, Id @@ User)] = {
     val id = t.productIterator.next().asInstanceOf[Id].asId[T]
-    logger.warn("check token user id = {}, product {}",id.toString,t.toString)
     val tokenOpt = (for {
       token <- OptionT(authTokenOps.findById(id).transact(xa))
       _ <- OptionT(verifyValid(token))
