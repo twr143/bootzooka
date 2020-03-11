@@ -89,8 +89,8 @@ val fs2Deps = Seq(
 val scalatest = "org.scalatest" %% "scalatest" % "3.0.8" % Test
 val unitTestingStack = Seq(scalatest)
 
-val embeddedPostgres = "com.opentable.components" % "otj-pg-embedded" % "0.13.3" % Test
-val dbTestingStack = Seq(embeddedPostgres)
+//val embeddedPostgres = "com.opentable.components" % "otj-pg-embedded" % "0.13.3" % Test
+//val dbTestingStack = Seq(embeddedPostgres)
 
 val commonDependencies = baseDependencies ++ unitTestingStack ++ loggingDependencies ++ configDependencies
 
@@ -210,7 +210,7 @@ lazy val rootProject = (project in file("."))
 lazy val backend: Project = (project in file("backend"))
   .settings(
     libraryDependencies ++= dbDependencies ++ httpDependencies ++ jsonDependencies ++ apiDocsDependencies ++ monitoringDependencies
-      ++ dbTestingStack ++ securityDependencies ++ emailDependencies ++ fs2Deps,
+       ++ securityDependencies ++ emailDependencies ++ fs2Deps,
     mainClass in Compile := Some("template.Main")
   )
   .enablePlugins(BuildInfoPlugin)

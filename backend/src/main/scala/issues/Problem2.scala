@@ -1,33 +1,18 @@
 package issues
+import scala.util.Random
 
 /**
   * Created by Ilya Volynin on 06.01.2020 at 14:18.
   */
 object Problem2 extends App {
-  import io.circe.generic.extras.Configuration
+  private val random = new Random()
+  val alpha = "abcdefghijklmnopqrstuvwxyz"
+  val size = alpha.size
 
-  implicit val configuration: Configuration = Configuration.default.withDefaults//.withDiscriminator("type")
+  def randStr(n:Int) = (1 to n).map(x => alpha(Random.nextInt.abs % size)).mkString
 
-  sealed trait A
+    def randomLoginEmailPassword(): (String, String, String) =
+      (randStr(12), s"user${random.nextInt(9000)}@bootzooka.com", randStr(12).mkString)
 
-//  object A {
-//
-//    implicit def codec: Codec[A] = deriveConfiguredCodec
-//  }
-
-//  case class B[T](a: ArrayBuffer[T]) extends A
-//
-  object B {
-//    implicit def codecT[T]: Codec[T] = deriveConfiguredCodec
-//
-//    implicit def codec[T]: Codec[B[T]] = deriveConfiguredCodec
-  }
-
-  //implicit val validator: Validator[String] = Validator.minLength(1) and Validator.maxLength(255)
-//  val endpoints: List[ServerEndpoint[_, _, _, EntityBody[IO], IO]] = List(endpoint1)
-//
-//  def endpoint1 = endpoint.get.out(jsonBody[A]).serverLogic[IO](_ => IO(B(ArrayBuffer(1,2,3))).map(Right(_)))
-//
-//
-//  println(endpoints.toOpenAPI("", "").toYaml)
+    println(randomLoginEmailPassword().toString())
 }

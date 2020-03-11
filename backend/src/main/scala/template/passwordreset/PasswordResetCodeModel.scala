@@ -4,12 +4,13 @@ import java.time.Instant
 
 import cats.implicits._
 import com.softwaremill.tagging.@@
+import com.typesafe.scalalogging.LazyLogging
 import template.security.AuthTokenOps
 import template.user.User
 import template.infrastructure.Doobie._
 import template.util.Id
 
-class PasswordResetCodeModel {
+class PasswordResetCodeModel extends LazyLogging {
 
   def insert(pr: PasswordResetCode): ConnectionIO[Unit] = {
     sql"""INSERT INTO password_reset_codes (id, user_id, valid_until)

@@ -16,16 +16,15 @@ import scala.concurrent.duration.Duration
 import cats.data.ValidatedNec
 import cats.implicits._
 
-
 class UserService(
-                   userModel: UserModel,
-                   emailScheduler: EmailScheduler,
-                   emailTemplates: EmailTemplates,
-                   apiKeyService: ApiKeyService,
-                   idGenerator: IdGenerator,
-                   clock: Clock,
-                   config: UserConfig
-                 ) extends StrictLogging {
+    userModel: UserModel,
+    emailScheduler: EmailScheduler,
+    emailTemplates: EmailTemplates,
+    apiKeyService: ApiKeyService,
+    idGenerator: IdGenerator,
+    clock: Clock,
+    config: UserConfig
+) extends StrictLogging {
 
   private val LoginAlreadyUsed = "Login already in use!"
 
@@ -34,7 +33,7 @@ class UserService(
   def registerNewUser(login: String, email: String, password: String): ConnectionIO[ApiKey] = {
     def failIfDefined(op: ConnectionIO[Option[User]], msg: String): ConnectionIO[Unit] = {
       op.flatMap {
-        case None => ().pure[ConnectionIO]
+        case None    => ().pure[ConnectionIO]
         case Some(_) => Fail.IncorrectInput(msg).raiseError[ConnectionIO, Unit]
       }
     }
@@ -45,8 +44,7 @@ class UserService(
     }
 
     def doRegister(): ConnectionIO[ApiKey] = {
-      val user = User(idGenerator.nextId[User](), login, login.lowerCased,
-        email.lowerCased, password, clock.instant())
+      val user = User(idGenerator.nextId[User](), login, login.lowerCased, email.lowerCased, password, clock.instant())
       val confirmationEmail = emailTemplates.registrationConfirmation(login)
       logger.debug(s"Registering new user: ${user.emailLowerCased}, with id: ${user.id}")
       for {
@@ -60,7 +58,8 @@ class UserService(
       _ <- UserRegisterValidator
         .validate(login, email, password)
         .fold(msg => {
-          Fail.IncorrectInputL(msg.map(_.errorMessage).toList)
+          Fail
+            .IncorrectInputL(msg.map(_.errorMessage).toList)
             .raiseError[ConnectionIO, Unit]
         }, _ => ().pure[ConnectionIO])
       _ <- checkUserDoesNotExist()
@@ -81,7 +80,7 @@ class UserService(
     def changeLogin(newLogin: String): ConnectionIO[Unit] = {
       val newLoginLowerCased = newLogin.lowerCased
       userModel.findByLogin(newLoginLowerCased).flatMap {
-        case Some(user) if user.id != userId => Fail.IncorrectInput(LoginAlreadyUsed).raiseError[ConnectionIO, Unit]
+        case Some(user) if user.id != userId      => Fail.IncorrectInput(LoginAlreadyUsed).raiseError[ConnectionIO, Unit]
         case Some(user) if user.login == newLogin => ().pure[ConnectionIO]
         case _ =>
           logger.debug(s"Changing login for user: $userId, to: $newLogin")
@@ -92,7 +91,7 @@ class UserService(
     def changeEmail(newEmail: String): ConnectionIO[Unit] = {
       val newEmailLowerCased = newEmail.lowerCased
       userModel.findByEmail(newEmailLowerCased).flatMap {
-        case Some(user) if user.id != userId => Fail.IncorrectInput(EmailAlreadyUsed).raiseError[ConnectionIO, Unit]
+        case Some(user) if user.id != userId                          => Fail.IncorrectInput(EmailAlreadyUsed).raiseError[ConnectionIO, Unit]
         case Some(user) if user.emailLowerCased == newEmailLowerCased => ().pure[ConnectionIO]
         case _ =>
           logger.debug(s"Changing email for user: $userId, to: $newEmail")
@@ -114,7 +113,7 @@ class UserService(
   private def userOrNotFound(op: ConnectionIO[Option[User]]): ConnectionIO[User] = {
     op.flatMap {
       case Some(user) => user.pure[ConnectionIO]
-      case None => Fail.NotFound("user").raiseError[ConnectionIO, User]
+      case None       => Fail.NotFound("user").raiseError[ConnectionIO, User]
     }
   }
 
@@ -134,9 +133,7 @@ object UserRegisterValidator {
   val MinLoginLength = 3
 
   def validate(login: String, email: String, password: String): ValidationResult[Unit] =
-    (validLogin(login.trim),
-      validEmail(email.trim),
-      validPassword(password.trim)).mapN((_, _, _) => ())
+    (validLogin(login.trim), validEmail(email.trim), validPassword(password.trim)).mapN((_, _, _) => ())
 
   private def validLogin(login: String): ValidationResult[String] =
     if (login.length >= MinLoginLength) login.validNec else ShortLogin.invalidNec

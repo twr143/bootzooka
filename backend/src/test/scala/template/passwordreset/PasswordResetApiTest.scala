@@ -19,7 +19,6 @@ import template.email.sender.DummyEmailSender
 import template.passwordreset.PasswordResetApi.{ForgotPassword_OUT, PasswordReset_OUT}
 import template.test.{BaseTest, TestEmbeddedPostgres}
 
-@Ignore
 class PasswordResetApiTest extends BaseTest with TestEmbeddedPostgres with Eventually {
   lazy val modules: MainModule = new MainModule {
     override def xa: Transactor[Task] = currentDb.xa
@@ -43,6 +42,7 @@ class PasswordResetApiTest extends BaseTest with TestEmbeddedPostgres with Event
     val code = eventually { codeSentToEmail(email) }
 
     // when
+    logger.warn("l e code: {} {} {}", login, email,code)
     val response2 = resetPassword(code, newPassword)
     response2.shouldDeserializeTo[PasswordReset_OUT]
 
@@ -113,7 +113,7 @@ class PasswordResetApiTest extends BaseTest with TestEmbeddedPostgres with Event
   }
 
   def codeFromResetPasswordEmail(email: String): Option[String] = {
-    val regexp = "code=([\\w]*)".r
+    val regexp = "code=([\\w|\\-]*)".r
     regexp.findFirstMatchIn(email).map(_.group(1))
   }
 }

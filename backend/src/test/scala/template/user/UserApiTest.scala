@@ -20,7 +20,6 @@ import template.email.sender.DummyEmailSender
 import template.test.{BaseTest, TestEmbeddedPostgres}
 
 import scala.concurrent.duration._
-@Ignore
 class UserApiTest extends BaseTest with TestEmbeddedPostgres with Eventually {
   lazy val modules: MainModule = new MainModule {
     override def xa: Transactor[Task] = currentDb.xa

@@ -7,7 +7,7 @@ import template.infrastructure.Doobie._
 import template.util.{Id, LowerCased}
 import com.softwaremill.tagging.@@
 import template.util.LowerCased
-import tsec.common.{VerificationStatus, Verified}
+import tsec.common.{VerificationFailed, VerificationStatus, Verified}
 
 class UserModel {
 
@@ -57,7 +57,8 @@ case class User(
     createdOn: Instant
 ) {
 
-  def verifyPassword(password: String): VerificationStatus = Verified
+  def verifyPassword(password: String): VerificationStatus =
+    if (password.equalsIgnoreCase(passwordHash)) Verified else VerificationFailed
 }
 
 object User {

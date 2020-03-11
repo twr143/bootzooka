@@ -40,7 +40,7 @@
     <appender-ref ref="STDOUT"/>
   </logger>
 
-  <root level="${LOG_LEVEL:-DEBUG}">
+  <root level="${LOG_LEVEL:-WARN}">
     <appender-ref ref="STDOUT"/>
   </root>
 

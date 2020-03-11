@@ -16,7 +16,7 @@ class Requests(val modules: MainModule) extends HttpTestSupport {
   private val random = new Random()
 
   def randomLoginEmailPassword(): (String, String, String) =
-    (random.nextString(12), s"user${random.nextInt(9000)}@bootzooka.com", random.nextString(12))
+    (randStr(12), s"user${random.nextInt(9000)}@bootzooka.com", randStr(12))
 
   def registerUser(login: String, email: String, password: String): Response[Task] = {
     val request = Request[Task](method = POST, uri = uri"/user/register")

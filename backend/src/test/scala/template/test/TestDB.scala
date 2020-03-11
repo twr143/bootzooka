@@ -19,11 +19,10 @@ import scala.concurrent.duration._
   */
 class TestDB(config: DBConfig) extends StrictLogging {
 
-  var xa: Transactor[Task] = _
   private val xaReady: MVar[Task, Transactor[Task]] = MVar.empty[Task, Transactor[Task]]().runSyncUnsafe()
   private val done: MVar[Task, Unit] = MVar.empty[Task, Unit]().runSyncUnsafe()
 
-  {
+  val xa = {
     implicit val contextShift: ContextShift[Task] = Task.contextShift(monix.execution.Scheduler.global)
 
     val xaResource = for {
@@ -47,7 +46,7 @@ class TestDB(config: DBConfig) extends StrictLogging {
       .startAndForget
       .runSyncUnsafe()
 
-    xa = xaReady.take.runSyncUnsafe()
+    xaReady.take.runSyncUnsafe()
   }
 
   private val flyway = {
