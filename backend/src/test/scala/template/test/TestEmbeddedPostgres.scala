@@ -10,6 +10,10 @@ import org.postgresql.jdbc.PgConnection
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, Suite}
 import template.infrastructure.DBConfig
 
+import scala.concurrent.Await
+import scala.concurrent.duration._
+
+
 /**
   * Base trait for tests which use the database. The database is cleaned after each test.
   */
@@ -25,13 +29,13 @@ trait TestEmbeddedPostgres extends BeforeAndAfterEach with BeforeAndAfterAll wit
       migrateOnStart = true
     )
     currentDb = new TestDB(currentDbConfig)
-    currentDb.testConnection()
+    currentDb.connectAndMigrate()
 //        currentDb.migrate()
   }
 
   override protected def afterAll(): Unit = {
-//    Thread.sleep(1000)
-//    currentDb.clean()
+    Thread.sleep(1000)
+    currentDb.clean()
     currentDb.close()
     super.afterAll()
   }

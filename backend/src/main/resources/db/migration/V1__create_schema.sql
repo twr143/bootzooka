@@ -49,4 +49,4 @@ CREATE TABLE "scheduled_emails"
 );
 ALTER TABLE "scheduled_emails"
   ADD CONSTRAINT "scheduled_emails_id" PRIMARY KEY ("id");
-commit;
+
