@@ -7,12 +7,11 @@ import cats.data.{Kleisli, NonEmptyList, OptionT}
 import template.util.ServerEndpoints
 import template.infrastructure.Json._
 import cats.implicits._
-import io.circe.Codec
+import io.circe.{Codec, Encoder}
 import io.circe.generic.AutoDerivation
 import io.circe.generic.extras.Configuration
 import io.circe.generic.extras.semiauto._
-import sttp.tapir.Schema
-import sttp.tapir.json.circe._
+import io.circe.syntax._
 
 /**
   * Created by Ilya Volynin on 10.03.2020 at 10:54.
@@ -23,12 +22,12 @@ case class MultiFlowApi(http: Http)(implicit sttpBackend: SttpBackend[Task, Noth
   private val mfPath = "mf"
 
   val multiFlowStringK: Kleisli[OptionT[Task, *], MFRequest, MFResponse] = Kleisli {
-    case MFRequestStr(s) => OptionT.liftF(Task.now(MFResponseString(s)))
-    case _               => OptionT.none
+    case MFRequestStr(s, _) => OptionT.liftF(Task.now(MFResponseString(s)))
+    case _                  => OptionT.none
   }
   val multiFlowIntK: Kleisli[OptionT[Task, *], MFRequest, MFResponse] = Kleisli {
-    case MFRequestInt(s) => OptionT.liftF(Task.now(MFResponseInt(s)))
-    case _               => OptionT.none
+    case MFRequestInt(s, _) => OptionT.liftF(Task.now(MFResponseInt(s)))
+    case _                  => OptionT.none
   }
   def optionFlat: OptionT[Task, MFResponse] => Task[MFResponse] = _.getOrElse(MFResponseDefault())
   private val multiFlowEndpoint = baseEndpoint.post
@@ -44,12 +43,17 @@ case class MultiFlowApi(http: Http)(implicit sttpBackend: SttpBackend[Task, Noth
 
 }
 object MultiFlowApi extends AutoDerivation {
-  implicit val configuration: Configuration = Configuration.default.withDiscriminator("type")
+  implicit val configuration: Configuration = Configuration.default.withDiscriminator("tp")
 
-  sealed trait MFRequest
-  case class MFRequestStr(s: String) extends MFRequest
-  case class MFRequestInt(s: Int) extends MFRequest
-
+  sealed trait MFRequest {
+    def tp: String
+  }
+  case class MFRequestStr(s: String, tp: String = "MFRequestStr") extends MFRequest
+  case class MFRequestInt(s: Int, tp: String = "MFRequestInt") extends MFRequest
+  implicit val encodeMFResponse: Encoder[MFResponse] = Encoder.instance {
+    case f: MFResponseString => f.asJson
+    case b: MFResponseInt    => b.asJson
+  }
   implicit val codecMFRequest: Codec[MFRequest] = deriveConfiguredCodec
   sealed trait MFResponse
   case class MFResponseString(s: String, desc: String = "str resp") extends MFResponse

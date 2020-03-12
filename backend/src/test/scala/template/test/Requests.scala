@@ -6,9 +6,9 @@ import template.user.UserApi._
 import monix.eval.Task
 import org.http4s._
 import org.http4s.syntax.all._
+import template.multiflow.MultiFlowApi.MFRequest
 
 import scala.util.Random
-
 class Requests(val modules: MainModule) extends HttpTestSupport {
 
   case class RegisteredUser(login: String, email: String, password: String, apiKey: String)
@@ -16,7 +16,13 @@ class Requests(val modules: MainModule) extends HttpTestSupport {
   private val random = new Random()
 
   def randomLoginEmailPassword(): (String, String, String) =
-    (randStr(12), s"user${random.nextInt(9000)}@bootzooka.com", randStr(12))
+    (randStr(12), s"user${random.nextInt(29000)}@template.com", randStr(12))
+
+  def callMultiflowEndpoint[R <: MFRequest](r: R): Response[Task] = {
+    val request = Request[Task](method = POST, uri = uri"/mf/mfep")
+      .withEntity(r.asInstanceOf[MFRequest])
+    modules.httpApi.mainRoutes(request).unwrap
+  }
 
   def registerUser(login: String, email: String, password: String): Response[Task] = {
     val request = Request[Task](method = POST, uri = uri"/user/register")
