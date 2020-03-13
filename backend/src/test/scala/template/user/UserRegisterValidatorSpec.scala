@@ -7,27 +7,27 @@ import template.user.UserRegisterValidator.{EmptyPassword, InvalidEmail, ShortLo
 
 class UserRegisterValidatorSpec extends FlatSpec with Matchers {
   "validate" should "accept valid data" in {
-    val dataIsValid = UserRegisterValidator.validate("login", "admin@bootzooka.com", "password")
+    val dataIsValid = UserRegisterValidator.validate("login", "admin@template.com", "password")
 
     dataIsValid shouldBe Valid(())
   }
 
   "validate" should "not accept login containing only empty spaces" in {
-    val dataIsValid = UserRegisterValidator.validate("   ", "admin@bootzooka.com", "password")
+    val dataIsValid = UserRegisterValidator.validate("   ", "admin@template.com", "password")
 
     dataIsValid shouldBe Invalid(Chain(ShortLogin))
   }
 
   "validate" should "not accept too short login" in {
     val tooShortLogin = "a" * (UserRegisterValidator.MinLoginLength - 1)
-    val dataIsValid   = UserRegisterValidator.validate(tooShortLogin, "admin@bootzooka.com", "password")
+    val dataIsValid   = UserRegisterValidator.validate(tooShortLogin, "admin@template.com", "password")
 
     dataIsValid shouldBe Invalid(Chain(ShortLogin))
   }
 
   "validate" should "not accept too short login after trimming" in {
     val loginTooShortAfterTrim = "a" * (UserRegisterValidator.MinLoginLength - 1) + "   "
-    val dataIsValid            = UserRegisterValidator.validate(loginTooShortAfterTrim, "admin@bootzooka.com", "password")
+    val dataIsValid            = UserRegisterValidator.validate(loginTooShortAfterTrim, "admin@template.com", "password")
 
     dataIsValid shouldBe Invalid(Chain(ShortLogin))
   }
@@ -45,7 +45,7 @@ class UserRegisterValidatorSpec extends FlatSpec with Matchers {
   }
 
   "validate" should "not accept password with empty spaces only" in {
-    val dataIsValid = UserRegisterValidator.validate("login", "admin@bootzooka.com", "    ")
+    val dataIsValid = UserRegisterValidator.validate("login", "admin@template.com", "    ")
 
     dataIsValid shouldBe Invalid(Chain(EmptyPassword))
   }
