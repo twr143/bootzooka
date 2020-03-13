@@ -10,7 +10,7 @@ class EmailTemplatesTest extends FlatSpec with Matchers {
     val email = templates.registrationConfirmation("john")
 
     // then
-    email.subject should be("SoftwareMill Bootzooka - registration confirmation for user john")
+    email.subject should be("Template - registration confirmation for user john")
     email.content should include("Dear john,")
     email.content should include("Regards,")
   }

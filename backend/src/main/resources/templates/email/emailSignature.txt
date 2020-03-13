@@ -1,5 +1,5 @@
 
 --
 Regards,
-SoftwareMill Bootzooka Dev Team
-http://softwaremill.com
+template Dev Team
+https://github.com/twr143/restApiTemplate

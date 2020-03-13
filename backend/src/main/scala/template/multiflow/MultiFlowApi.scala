@@ -5,7 +5,6 @@ import sttp.client.SttpBackend
 import template.http.Http
 import cats.data.{Kleisli, NonEmptyList, OptionT}
 import template.util.ServerEndpoints
-import template.infrastructure.Json._
 import cats.implicits._
 import io.circe.{Codec, Encoder}
 import io.circe.generic.AutoDerivation
@@ -16,7 +15,7 @@ import io.circe.syntax._
 /**
   * Created by Ilya Volynin on 10.03.2020 at 10:54.
   */
-case class MultiFlowApi(http: Http)(implicit sttpBackend: SttpBackend[Task, Nothing, Nothing]) extends StrictLogging {
+case class MultiFlowApi(http: Http) extends StrictLogging {
   import MultiFlowApi._
   import http._
   private val mfPath = "mf"
@@ -53,6 +52,7 @@ object MultiFlowApi extends AutoDerivation {
   implicit val encodeMFResponse: Encoder[MFResponse] = Encoder.instance {
     case f: MFResponseString => f.asJson
     case b: MFResponseInt    => b.asJson
+    case d: MFResponseDefault    => d.asJson
   }
   implicit val codecMFRequest: Codec[MFRequest] = deriveConfiguredCodec
   sealed trait MFResponse

@@ -104,7 +104,7 @@ class PasswordResetApiTest extends BaseTest with TestEmbeddedPostgres with Event
     modules.emailService.sendBatch().unwrap
 
     val emailData = DummyEmailSender
-      .findSentEmail(email, "SoftwareMill Bootzooka password reset")
+      .findSentEmail(email, "Template password reset")
       .getOrElse(throw new IllegalStateException(s"No password reset email sent to $email!"))
 
     codeFromResetPasswordEmail(emailData.content)

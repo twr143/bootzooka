@@ -9,7 +9,7 @@ import template.util.BaseModule
  */
 trait MultiFlowModule extends BaseModule{
   def http: Http
-  lazy val mfApi = MultiFlowApi(http)(sttpBackend)
+  lazy val mfApi = MultiFlowApi(http)
   def sttpBackend: SttpBackend[Task, Nothing, Nothing]
 
 }
