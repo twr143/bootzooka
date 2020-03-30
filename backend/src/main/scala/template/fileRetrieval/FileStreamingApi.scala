@@ -23,7 +23,7 @@ import template.user.User
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration._
-import template.util.{Id, ServerEndpoints}
+import template.util._
 import template.util.SttpUtils._
 import com.softwaremill.tagging.@@
 import template.security.{ApiKey, Auth}
@@ -124,15 +124,13 @@ case class FileStreamingApi(http: Http, auth: Auth[ApiKey], config: FSConfig)(im
           val fullPath = s"${config.fileStorage.baseDir}/$file"
           io.file
             .exists[Task](streamReadFileBlocker, Paths.get(fullPath))
-            .flatMap(does =>
-              if (does)
+            .flatMap(_.fold(Task.raiseError(Fail.NotFound(s"$file")))(
                 io.file
                   .readAll[Task](Paths.get(fullPath), streamReadFileBlocker, 4096)
                   .onFinalize(Task(logger.warn("file stream down finalized")))
                   .pure[Task]
-                  .map(s => (s"attachment; filename=$file", s))
-              else
-                Task.raiseError(Fail.NotFound(s"$file"))
+                  .map(s => (s"attachment; filename=$file", s)))
+
             )
   }
   private val streamingFileEndpoint = baseEndpoint.get

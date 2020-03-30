@@ -3,6 +3,7 @@ package template
 import java.util.Locale
 
 import cats.data.NonEmptyList
+import cats.effect.Sync
 import com.softwaremill.tagging._
 import monix.eval.Task
 import org.http4s.EntityBody
@@ -20,4 +21,9 @@ package object util {
   }
 
   type ServerEndpoints = NonEmptyList[ServerEndpoint[_, _, _, EntityBody[Task], Task]]
+
+  implicit class BoolUtil[F[_],A](b: Boolean) {
+    def fold(f: F[A])(t: F[A]): F[A] = if (b) t else f
+  }
+
 }
