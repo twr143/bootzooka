@@ -28,7 +28,7 @@ object Consumer1 {
          .eval {
            (Topic[Task, String]("initial"), Deferred[Task, Unit]).tupled
          }
-         .flatMap {
+         .>>= {
            case (topic, stop) =>
              val kafkaConsumer = Stream
                  .awakeEvery[Task](1.seconds).zipWithIndex

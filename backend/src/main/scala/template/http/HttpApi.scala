@@ -53,7 +53,7 @@ class HttpApi(
   lazy val resource: Resource[Task, org.http4s.server.Server[Task]] = {
     val prometheusHttp4sMetrics = Prometheus[Task](collectorRegistry)
     Resource.liftF(prometheusHttp4sMetrics.map(m => Metrics[Task](m)(mainRoutes)))
-      .flatMap { monitoredRoutes =>
+      .>>= { monitoredRoutes =>
         val app: HttpApp[Task] = Router(
           // for /api/v1 requests, first trying the API; then the docs; then, returning 404
           s"$apiContextPath" -> (CORS(monitoredRoutes, corsConfig) <+> docsRoutes <+> respondWithNotFound),

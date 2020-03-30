@@ -1,5 +1,6 @@
 package template.security
 
+import cats.implicits._
 import java.security.SecureRandom
 import java.time.{Clock, Instant}
 
@@ -14,7 +15,6 @@ import template.user.User
 import template.util._
 
 import scala.concurrent.duration._
-//import cats.implicits._
 
 class Auth[T](
     authTokenOps: AuthTokenOps[T],
@@ -32,7 +32,7 @@ class Auth[T](
       _ <- OptionT(verifyValid(token))
     } yield token).value
 
-    tokenOpt.flatMap {
+    tokenOpt.>>= {
       case None =>
         logger.debug(s"Auth failed for: ${authTokenOps.tokenName} $id")
         // random sleep to prevent timing attacks

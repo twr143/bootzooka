@@ -32,7 +32,7 @@ class UserService(
 
   def registerNewUser(login: String, email: String, password: String): ConnectionIO[ApiKey] = {
     def failIfDefined(op: ConnectionIO[Option[User]], msg: String): ConnectionIO[Unit] = {
-      op.flatMap {
+      op.>>= {
         case None    => ().pure[ConnectionIO]
         case Some(_) => Fail.IncorrectInput(msg).raiseError[ConnectionIO, Unit]
       }
@@ -79,7 +79,7 @@ class UserService(
   def changeUser(userId: Id @@ User, newLogin: String, newEmail: String): ConnectionIO[Unit] = {
     def changeLogin(newLogin: String): ConnectionIO[Unit] = {
       val newLoginLowerCased = newLogin.lowerCased
-      userModel.findByLogin(newLoginLowerCased).flatMap {
+      userModel.findByLogin(newLoginLowerCased).>>= {
         case Some(user) if user.id != userId      => Fail.IncorrectInput(LoginAlreadyUsed).raiseError[ConnectionIO, Unit]
         case Some(user) if user.login == newLogin => ().pure[ConnectionIO]
         case _ =>
@@ -90,7 +90,7 @@ class UserService(
 
     def changeEmail(newEmail: String): ConnectionIO[Unit] = {
       val newEmailLowerCased = newEmail.lowerCased
-      userModel.findByEmail(newEmailLowerCased).flatMap {
+      userModel.findByEmail(newEmailLowerCased).>>= {
         case Some(user) if user.id != userId                          => Fail.IncorrectInput(EmailAlreadyUsed).raiseError[ConnectionIO, Unit]
         case Some(user) if user.emailLowerCased == newEmailLowerCased => ().pure[ConnectionIO]
         case _ =>
@@ -111,7 +111,7 @@ class UserService(
     } yield ()
 
   private def userOrNotFound(op: ConnectionIO[Option[User]]): ConnectionIO[User] = {
-    op.flatMap {
+    op.>>= {
       case Some(user) => user.pure[ConnectionIO]
       case None       => Fail.NotFound("user").raiseError[ConnectionIO, User]
     }

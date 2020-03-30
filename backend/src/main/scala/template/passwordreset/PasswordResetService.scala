@@ -27,10 +27,10 @@ class PasswordResetService(
 ) extends StrictLogging {
 
   def forgotPassword(loginOrEmail: String): ConnectionIO[Unit] = {
-    userModel.findByLoginOrEmail(loginOrEmail.lowerCased).flatMap {
+    userModel.findByLoginOrEmail(loginOrEmail.lowerCased).>>= {
       case None => Fail.NotFound("user").raiseError[ConnectionIO, Unit]
       case Some(user) =>
-        createCode(user).flatMap(sendCode(user, _))
+        createCode(user).>>=(sendCode(user, _))
     }
   }
 

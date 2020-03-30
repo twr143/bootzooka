@@ -48,7 +48,7 @@ case class FileStreamingApi(http: Http, auth: Auth[ApiKey], config: FSConfig)(im
         .post(uri"${config.url}")
         .body(Samples_Body_Call(data.id).asJson.toString())
         .send()
-        .flatMap(handleRemoteResponse[List[HutWithId]])
+        .>>=(handleRemoteResponse[List[HutWithId]])
     } yield Samples_OUT(r)
   }
   private val samplesEndpoint = baseEndpoint.post
@@ -97,7 +97,7 @@ case class FileStreamingApi(http: Http, auth: Auth[ApiKey], config: FSConfig)(im
       r <- Stream
         .emit(List[Char]('a', 'b', 'c', 'd'))
         .repeat
-        .flatMap(list => Stream.chunk(Chunk.seq(list)))
+        .>>=(list => Stream.chunk(Chunk.seq(list)))
         .metered[Task](100.millis)
         .take(size)
         .covary[Task]
@@ -124,7 +124,7 @@ case class FileStreamingApi(http: Http, auth: Auth[ApiKey], config: FSConfig)(im
           val fullPath = s"${config.fileStorage.baseDir}/$file"
           io.file
             .exists[Task](streamReadFileBlocker, Paths.get(fullPath))
-            .flatMap(_.fold(Task.raiseError(Fail.NotFound(s"$file")))(
+            .>>=(_.fold(Task.raiseError(Fail.NotFound(s"$file")))(
                 io.file
                   .readAll[Task](Paths.get(fullPath), streamReadFileBlocker, 4096)
                   .onFinalize(Task(logger.warn("file stream down finalized")))

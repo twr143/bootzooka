@@ -1,5 +1,6 @@
 package template.infrastructure
 
+import  cats.implicits._
 import monix.eval.Task
 import sttp.client.monad.MonadError
 import sttp.client.ws.WebSocketResponse
@@ -22,7 +23,7 @@ class SetCorrelationIdBackend(delegate: SttpBackend[Task, Nothing, NothingT]) ex
         case Some(cid) => request.header(CorrelationId.headerName, cid)
         case None      => request
       }
-      .flatMap(delegate.send)
+      .>>=(delegate.send)
   }
 
   override def openWebsocket[T, WS_RESULT](request: Request[T, Nothing], handler: NothingT[WS_RESULT]): Task[WebSocketResponse[WS_RESULT]] =
