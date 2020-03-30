@@ -55,7 +55,7 @@ case class FileStreamingApi(http: Http, auth: Auth[ApiKey], config: FSConfig)(im
     .in(fsPath / "samples")
     .in(jsonBody[Samples_IN])
     .out(jsonBody[Samples_OUT])
-    .serverLogic[Task](samplesK mapF toOutF run)
+    .serverLogic(samplesK mapF toOutF run)
 
   private val readFileBlocker = Executors.newFixedThreadPool(4)
 
@@ -74,7 +74,7 @@ case class FileStreamingApi(http: Http, auth: Auth[ApiKey], config: FSConfig)(im
     .in(fsPath / "fu")
     .in(multipartBody[HutBook])
     .out(jsonBody[HutBook_OUT])
-    .serverLogic[Task](auth.checkUser andThen fileUploadK mapF toOutF run)
+    .serverLogic(auth.checkUser >>> fileUploadK mapF toOutF run)
 
   val fileRetrievalK: Kleisli[Task, (Product, Id @@ User), (String, String, Array[Byte])] = Kleisli { _ =>
     for {
@@ -87,7 +87,7 @@ case class FileStreamingApi(http: Http, auth: Auth[ApiKey], config: FSConfig)(im
     .out(header[String]("Content-Disposition"))
     .out(header[String]("Content-Type"))
     .out(binaryBody[Array[Byte]])
-    .serverLogic[Task](IdToProductK andThen auth.checkUser andThen fileRetrievalK mapF toOutF run)
+    .serverLogic(IdToProductK >>> auth.checkUser >>> fileRetrievalK mapF toOutF run)
 
   import fs2._
 
@@ -115,7 +115,7 @@ case class FileStreamingApi(http: Http, auth: Auth[ApiKey], config: FSConfig)(im
     .out(header[String]("Content-Length"))
     .out(statusCode)
     .out(streamBody[EntityBody[Task]](schemaFor[Byte], CodecFormat.TextPlain()))
-    .serverLogic[Task](streamingK mapF toOutF run)
+    .serverLogic(streamingK mapF toOutF run)
 
   private val streamReadFileBlocker = Blocker.liftExecutionContext(ExecutionContext.fromExecutorService(Executors.newFixedThreadPool(4)))
 
@@ -138,7 +138,7 @@ case class FileStreamingApi(http: Http, auth: Auth[ApiKey], config: FSConfig)(im
     .in(query[String]("file"))
     .out(header[String]("Content-Disposition"))
     .out(streamBody[EntityBody[Task]](schemaFor[Byte], CodecFormat.OctetStream()))
-    .serverLogic[Task] (streamingFileK mapF toOutF run)
+    .serverLogic (streamingFileK mapF toOutF run)
 
   val endpoints: ServerEndpoints =
     NonEmptyList

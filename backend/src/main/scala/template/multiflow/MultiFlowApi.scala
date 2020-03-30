@@ -33,7 +33,7 @@ case class MultiFlowApi(http: Http) extends StrictLogging {
     .in(mfPath / "mfep")
     .in(jsonBody[MFRequest])
     .out(jsonBody[MFResponse])
-    .serverLogic[Task](multiFlowStringK <+> multiFlowIntK mapF optionFlat mapF toOutF run)
+    .serverLogic(multiFlowStringK <+> multiFlowIntK mapF optionFlat mapF toOutF run)
 
   val endpoints: ServerEndpoints =
     NonEmptyList

@@ -24,7 +24,7 @@ class PasswordResetApi(http: Http, passwordResetService: PasswordResetService, x
     .in(PasswordResetPath / "reset")
     .in(jsonBody[PasswordReset_IN])
     .out(jsonBody[PasswordReset_OUT])
-    .serverLogic[Task](pResetK mapF toOutF run)
+    .serverLogic(pResetK mapF toOutF run)
 
   val forgotPK: Kleisli[Task, ForgotPassword_IN, ForgotPassword_OUT] = Kleisli { data =>
     for {
@@ -36,7 +36,7 @@ class PasswordResetApi(http: Http, passwordResetService: PasswordResetService, x
     .in(PasswordResetPath / "forgot")
     .in(jsonBody[ForgotPassword_IN])
     .out(jsonBody[ForgotPassword_OUT])
-    .serverLogic[Task] (forgotPK mapF toOutF run)
+    .serverLogic (forgotPK mapF toOutF run)
 
   val endpoints: ServerEndpoints =
     NonEmptyList

@@ -14,6 +14,7 @@ import template.Fail
 import template.util.ServerEndpoints
 
 class EndpointsToRoutes(http: Http, apiContextPath: String) {
+
   /**
     * Interprets the given endpoint descriptions as http4s routes
     */
@@ -40,8 +41,13 @@ class EndpointsToRoutes(http: Http, apiContextPath: String) {
     * code, by translating it using the `http.exceptionToErrorOut` method and using that to create the response.
     */
   private val decodeFailureHandler: DecodeFailureHandler = {
-    def failResponse(code: StatusCode, msg: String): DecodeFailureHandling =
-      DecodeFailureHandling.response(http.failOutput)((code, Error_OUT(List(msg))))
+    def failResponse(code: StatusCode, msg: String): DecodeFailureHandling = {
+      if (msg.contains("Invalid value for: header")) {
+        val amendMsg = msg.replace("Invalid value for: header ", "header_wrong_")
+        DecodeFailureHandling.response(http.failOutput)((code, Error_OUT(List(amendMsg))))
+      } else
+        DecodeFailureHandling.response(http.failOutput)((code, Error_OUT(List(msg))))
+    }
 
     val defaultHandler = ServerDefaults.decodeFailureHandler.copy(response = failResponse)
 
