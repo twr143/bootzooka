@@ -31,6 +31,7 @@ import cats.data.{Kleisli, NonEmptyList}
 import monix.nio.text.UTF8Codec.utf8Decode
 import sttp.model.StatusCode
 import template.util.IdUtils._
+import sttp.tapir.Codec._
 
 /**
   * Created by Ilya Volynin on 16.12.2019 at 12:12.
@@ -86,7 +87,7 @@ case class FileStreamingApi(http: Http, auth: Auth[ApiKey], config: FSConfig)(im
     //    .in(jsonBody[HutFile_IN])
     .out(header[String]("Content-Disposition"))
     .out(header[String]("Content-Type"))
-    .out(binaryBody[Array[Byte]])
+    .out(rawBinaryBody[Array[Byte]])
     .serverLogic(IdToProductK >>> auth.checkUser >>> fileRetrievalK mapF toOutF run)
 
   import fs2._

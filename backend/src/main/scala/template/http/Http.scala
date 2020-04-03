@@ -1,8 +1,6 @@
 package template.http
 
 import cats.implicits._
-import template._
-import template.infrastructure.Json._
 import template.util.Id
 import com.softwaremill.tagging._
 import com.typesafe.scalalogging.StrictLogging
@@ -15,7 +13,7 @@ import sttp.tapir.json.circe.TapirJsonCirce
 import template.Fail
 import template.infrastructure.Json._
 import tsec.common.SecureRandomId
-
+import sttp.tapir.Codec._
 /**
   * Helper class for defining HTTP endpoints. Import the members of this class when defining an HTTP API using tapir.
   */
@@ -79,9 +77,9 @@ class Http() extends Tapir with TapirJsonCirce with TapirSchemas with StrictLogg
   * Schemas for custom types used in endpoint descriptions (as parts of query parameters, JSON bodies, etc.)
   */
 trait TapirSchemas {
-
+  implicit val sSecRandId = Schema[SecureRandomId](SchemaType.SString)
   implicit val idPlainCodec: PlainCodec[SecureRandomId] =
-    Codec.stringPlainCodecUtf8.map(_.asInstanceOf[SecureRandomId])(identity)
+    Codec.stringCodec(_.asInstanceOf[SecureRandomId])
 
   implicit def taggedPlainCodec[U, T](implicit uc: PlainCodec[U]): PlainCodec[U @@ T] =
     uc.map(_.taggedWith[T])(identity)

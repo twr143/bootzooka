@@ -14,9 +14,9 @@ val doobieVersion = "0.8.6"
 val http4sVersion = "0.21.0-M5"
 val circeVersion = "0.12.3"
 val tsecVersion = "0.1.0"
-val sttpVersion = "2.0.0-RC7"
+val sttpVersion = "2.0.7"
 val prometheusVersion = "0.8.1"
-val tapirVersion = "0.12.19"
+val tapirVersion = "0.13.0"
 
 val dbDependencies = Seq(
   "org.tpolecat" %% "doobie-core" % doobieVersion,
@@ -52,7 +52,7 @@ val jsonDependencies = Seq(
 
 val loggingDependencies = Seq(
   "com.typesafe.scala-logging" %% "scala-logging" % "3.9.2",
-  "ch.qos.logback" % "logback-classic" % "1.2.3",
+//  "ch.qos.logback" % "logback-classic" % "1.2.3",
   "org.codehaus.janino" % "janino" % "3.1.0",
   "de.siegmar" % "logback-gelf" % "2.1.2",
   "com.softwaremill.correlator" %% "monix-logback-http4s" % "0.1.5"

@@ -6,7 +6,7 @@ import sttp.client.{NothingT, SttpBackend}
 
 trait InfrastructureModule {
   lazy val sttpBackend: SttpBackend[Task, Nothing, NothingT] = new SetCorrelationIdBackend(
-    new LoggingSttpBackend[Task, Nothing, NothingT](PrometheusBackend[Task, Nothing](baseSttpBackend))
+    new LoggingSttpBackend[Task, Nothing, NothingT](PrometheusBackend[Task, Nothing, NothingT](baseSttpBackend))
   )
 
   def baseSttpBackend: SttpBackend[Task, Nothing, NothingT]
