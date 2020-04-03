@@ -44,7 +44,7 @@ class EndpointsToRoutes(http: Http, apiContextPath: String) {
     def failResponse(code: StatusCode, msg: String): DecodeFailureHandling = {
       if (msg.contains("Invalid value for: header")) {
         val amendMsg = msg.replace("Invalid value for: header ", "header_wrong_")
-        DecodeFailureHandling.response(http.failOutput)((code, Error_OUT(List(amendMsg))))
+        DecodeFailureHandling.response(http.failOutput)((StatusCode.Unauthorized, Error_OUT(List(amendMsg))))
       } else
         DecodeFailureHandling.response(http.failOutput)((code, Error_OUT(List(msg))))
     }

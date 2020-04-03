@@ -123,11 +123,11 @@ lazy val commonSettings = commonSmlBuildSettings ++ Seq(
   },
   copyWebapp := copyWebapp.dependsOn(yarnTask.toTask(" build")).value,
   cancelable in Global := true,
-    addCompilerPlugin(scalafixSemanticdb), // enable SemanticDB
-       scalacOptions ++= List(
-        "-Yrangepos",          // required by SemanticDB compiler plugin
-        "-Ywarn-unused-import" // required by `RemoveUnused` rule
-       )
+  addCompilerPlugin(scalafixSemanticdb), // enable SemanticDB
+  scalacOptions ++= List(
+    "-Yrangepos", // required by SemanticDB compiler plugin
+    "-Ywarn-unused-import" // required by `RemoveUnused` rule
+  )
 )
 
 lazy val buildInfoSettings = Seq(
@@ -164,8 +164,9 @@ lazy val fatJarSettings = Seq(
 lazy val dockerSettings = Seq(
   dockerExposedPorts := Seq(8080),
   dockerBaseImage := "adoptopenjdk:11.0.5_10-jdk-hotspot",
-  packageName in Docker := "bootzooka",
-  dockerUsername := Some("softwaremill"),
+  packageName in Docker := "template",
+  dockerUsername := Some("iv"),
+  dockerAlias := DockerAlias(None, None, "mytempl5", Some("templtag5")),
   dockerCommands := {
     dockerCommands.value.flatMap {
       case ep @ ExecCmd("ENTRYPOINT", _*) =>
@@ -182,7 +183,6 @@ lazy val dockerSettings = Seq(
     Seq(entrypointScript -> entrypointScriptTargetPath)
   },
   dockerUpdateLatest := true,
-  publishLocal in Docker := (publishLocal in Docker).dependsOn(copyWebapp).value,
   version in Docker := git.gitHeadCommit.value.map(head => now() + "-" + head.take(8)).getOrElse("latest")
 )
 
@@ -210,7 +210,7 @@ lazy val rootProject = (project in file("."))
 lazy val backend: Project = (project in file("backend"))
   .settings(
     libraryDependencies ++= dbDependencies ++ httpDependencies ++ jsonDependencies ++ apiDocsDependencies ++ monitoringDependencies
-       ++ securityDependencies ++ emailDependencies ++ fs2Deps,
+      ++ securityDependencies ++ emailDependencies ++ fs2Deps,
     mainClass in Compile := Some("template.Main")
   )
   .enablePlugins(BuildInfoPlugin)
