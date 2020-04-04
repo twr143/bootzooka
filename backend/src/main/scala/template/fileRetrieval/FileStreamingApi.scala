@@ -45,7 +45,7 @@ case class FileStreamingApi(http: Http, auth: Auth[ApiKey], config: FSConfig)(im
 
   val samplesK: Kleisli[Task, Samples_IN, Samples_OUT] = Kleisli { data =>
     for {
-      r <- basicRequest
+      r <- basicRequest.copy(options = basicRequest.options.copy(readTimeout = 1 seconds))
         .post(uri"${config.url}")
         .body(Samples_Body_Call(data.id).asJson.toString())
         .send()

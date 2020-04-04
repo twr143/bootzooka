@@ -3,8 +3,8 @@ package template.http
 import java.util.concurrent.Executors
 
 import cats.data.{Kleisli, OptionT}
-import cats.effect.{Blocker, ContextShift, Effect, Resource}
 import cats.implicits._
+import cats.effect.{Blocker, ContextShift, Effect, Resource}
 import template.util.ServerEndpoints
 import io.prometheus.client.CollectorRegistry
 import monix.eval.Task
@@ -12,7 +12,7 @@ import monix.execution.Scheduler.Implicits.global
 import org.http4s._
 import org.http4s.dsl.Http4sDsl
 import org.http4s.metrics.prometheus.Prometheus
-import org.http4s.server.Router
+import org.http4s.server.{Router, Server}
 import org.http4s.server.blaze.BlazeServerBuilder
 import org.http4s.server.middleware.{CORS, CORSConfig, Metrics}
 import org.http4s.server.staticcontent.{ResourceService, _}
@@ -50,9 +50,9 @@ class HttpApi(
   /**
     * The resource describing the HTTP server; binds when the resource is allocated.
     */
-  lazy val resource: Resource[Task, org.http4s.server.Server[Task]] = {
-    val prometheusHttp4sMetrics = Prometheus[Task](collectorRegistry)
-    Resource.liftF(prometheusHttp4sMetrics.map(m => Metrics[Task](m)(mainRoutes)))
+  lazy val resource: Resource[Task, Server[Task]] = {
+    val prometheusHttp4sMetrics = Prometheus.metricsOps[Task](collectorRegistry, "iv_template_server")
+    prometheusHttp4sMetrics.map(m => Metrics[Task](m)(mainRoutes))
       .>>= { monitoredRoutes =>
         val app: HttpApp[Task] = Router(
           // for /api/v1 requests, first trying the API; then the docs; then, returning 404
@@ -73,9 +73,8 @@ class HttpApi(
 
   private val staticFileBlocker = Blocker.liftExecutionContext(ExecutionContext.fromExecutorService(Executors.newFixedThreadPool(4)))
 
-  private def indexResponse[B[_]](r: Request[B])(implicit e: Effect[B], cs:ContextShift[B]): B[Response[B]] =
-    StaticFile.fromResource(s"/webapp/index.html", staticFileBlocker, Some(r)).
-      getOrElseF(e.pure(Response.notFound))
+  private def indexResponse[B[_]](r: Request[B])(implicit e: Effect[B], cs: ContextShift[B]): B[Response[B]] =
+    StaticFile.fromResource(s"/webapp/index.html", staticFileBlocker, Some(r)).getOrElseF(e.pure(Response.notFound))
 
   private val respondWithNotFound: HttpRoutes[Task] = Kleisli(_ => OptionT.pure(Response.notFound))
   private val respondWithIndex: HttpRoutes[Task] = Kleisli(req => OptionT.liftF(indexResponse(req)))

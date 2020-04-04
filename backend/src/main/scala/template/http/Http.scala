@@ -11,9 +11,12 @@ import sttp.tapir.Codec.PlainCodec
 import sttp.tapir._
 import sttp.tapir.json.circe.TapirJsonCirce
 import template.Fail
+import template.Fail.RequestTimedout
 import template.infrastructure.Json._
 import tsec.common.SecureRandomId
-import sttp.tapir.Codec._
+
+import scala.util.control.NonFatal
+
 /**
   * Helper class for defining HTTP endpoints. Import the members of this class when defining an HTTP API using tapir.
   */
@@ -49,10 +52,11 @@ class Http() extends Tapir with TapirJsonCirce with TapirSchemas with StrictLogg
     case Fail.Forbidden             => (StatusCode.Forbidden, List("Forbidden"))
     case Fail.Unauthorized          => (StatusCode.Unauthorized, List("Unauthorized"))
     case Fail.UnauthorizedM(msg)    => (StatusCode.Unauthorized, List(msg))
+    case Fail.RequestTimedout(msg)  => (StatusCode.RequestTimeout, List(msg))
     case _                          => InternalServerError
   }
 
-  def exceptionToErrorOut(e: Exception): (StatusCode, Error_OUT) = {
+  def exceptionToErrorOut(e: Throwable): (StatusCode, Error_OUT) = {
     val (statusCode, message) = e match {
       case f: Fail => failToResponseData(f)
       case _ =>
@@ -65,10 +69,9 @@ class Http() extends Tapir with TapirJsonCirce with TapirSchemas with StrictLogg
 
   def toOutF[T]: Task[T] => Task[Either[(StatusCode, Error_OUT), T]] = { f =>
     f.map(t => t.asRight[(StatusCode, Error_OUT)]).recover {
-      case e: Exception => exceptionToErrorOut(e).asLeft[T]
+      case NonFatal(e) => exceptionToErrorOut(e).asLeft[T]
     }
   }
-
 
   override def jsonPrinter: Printer = noNullsPrinter
 }
