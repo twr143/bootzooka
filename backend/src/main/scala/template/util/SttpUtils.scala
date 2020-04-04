@@ -27,9 +27,6 @@ object SttpUtils extends StrictLogging {
             Task.raiseError(Fail.IncorrectInput(fb))
           }, l => Task.now(l))
       )
-    } else if (res.code == sttp.model.StatusCode.RequestTimeout) {
-      logger.error(s"timed out {}, body ", res.code, res.body)
-      Task.raiseError(Fail.RequestTimedout(s"timed out ${res.body}"))
     } else {
       logger.error(s"unsuccessfull response, code {}, body ", res.code, res.body)
       Task.raiseError(Fail.IncorrectInput(s"unsuccessfull response ${res.code}"))

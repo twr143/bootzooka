@@ -6,12 +6,12 @@ import com.softwaremill.tagging._
 import com.typesafe.scalalogging.StrictLogging
 import io.circe.Printer
 import monix.eval.Task
+import sttp.client.SttpClientException._
 import sttp.model.StatusCode
 import sttp.tapir.Codec.PlainCodec
 import sttp.tapir._
 import sttp.tapir.json.circe.TapirJsonCirce
 import template.Fail
-import template.Fail.RequestTimedout
 import template.infrastructure.Json._
 import tsec.common.SecureRandomId
 
@@ -52,13 +52,14 @@ class Http() extends Tapir with TapirJsonCirce with TapirSchemas with StrictLogg
     case Fail.Forbidden             => (StatusCode.Forbidden, List("Forbidden"))
     case Fail.Unauthorized          => (StatusCode.Unauthorized, List("Unauthorized"))
     case Fail.UnauthorizedM(msg)    => (StatusCode.Unauthorized, List(msg))
-    case Fail.RequestTimedout(msg)  => (StatusCode.RequestTimeout, List(msg))
     case _                          => InternalServerError
   }
 
   def exceptionToErrorOut(e: Throwable): (StatusCode, Error_OUT) = {
     val (statusCode, message) = e match {
       case f: Fail => failToResponseData(f)
+      case _: ReadException => (StatusCode.RequestTimeout,List("read"))
+      case _: ConnectException => (StatusCode.RequestTimeout,List("connect"))
       case _ =>
         logger.error("Exception when processing request", e)
         InternalServerError

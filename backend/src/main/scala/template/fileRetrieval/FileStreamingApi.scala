@@ -45,7 +45,8 @@ case class FileStreamingApi(http: Http, auth: Auth[ApiKey], config: FSConfig)(im
 
   val samplesK: Kleisli[Task, Samples_IN, Samples_OUT] = Kleisli { data =>
     for {
-      r <- basicRequest.copy(options = basicRequest.options.copy(readTimeout = 1 seconds))
+      r <- basicRequest
+        .readTimeout(1 seconds)
         .post(uri"${config.url}")
         .body(Samples_Body_Call(data.id).asJson.toString())
         .send()
@@ -120,26 +121,26 @@ case class FileStreamingApi(http: Http, auth: Auth[ApiKey], config: FSConfig)(im
 
   private val streamReadFileBlocker = Blocker.liftExecutionContext(ExecutionContext.fromExecutorService(Executors.newFixedThreadPool(4)))
 
-  val streamingFileK: Kleisli[Task, String, (String,  Stream[Task, Byte])] = Kleisli {
-    file: String =>
-          val fullPath = s"${config.fileStorage.baseDir}/$file"
+  val streamingFileK: Kleisli[Task, String, (String, Stream[Task, Byte])] = Kleisli { file: String =>
+    val fullPath = s"${config.fileStorage.baseDir}/$file"
+    io.file
+      .exists[Task](streamReadFileBlocker, Paths.get(fullPath))
+      .>>=(
+        _.fold(Task.raiseError(Fail.NotFound(s"$file")))(
           io.file
-            .exists[Task](streamReadFileBlocker, Paths.get(fullPath))
-            .>>=(_.fold(Task.raiseError(Fail.NotFound(s"$file")))(
-                io.file
-                  .readAll[Task](Paths.get(fullPath), streamReadFileBlocker, 4096)
-                  .onFinalize(Task(logger.warn("file stream down finalized")))
-                  .pure[Task]
-                  .map(s => (s"attachment; filename=$file", s)))
-
-            )
+            .readAll[Task](Paths.get(fullPath), streamReadFileBlocker, 4096)
+            .onFinalize(Task(logger.warn("file stream down finalized")))
+            .pure[Task]
+            .map(s => (s"attachment; filename=$file", s))
+        )
+      )
   }
   private val streamingFileEndpoint = baseEndpoint.get
     .in(fsPath / "streamfile")
     .in(query[String]("file"))
     .out(header[String]("Content-Disposition"))
     .out(streamBody[EntityBody[Task]](schemaFor[Byte], CodecFormat.OctetStream()))
-    .serverLogic (streamingFileK mapF toOutF run)
+    .serverLogic(streamingFileK mapF toOutF run)
 
   val endpoints: ServerEndpoints =
     NonEmptyList

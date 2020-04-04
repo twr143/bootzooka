@@ -18,7 +18,6 @@ class LoggingSttpBackend[F[_], S, WS_HANDLER[_]](delegate: SttpBackend[F, S, WS_
   override def send[T](request: Request[T, S]): F[Response[T]] = {
     val ts = System.currentTimeMillis()
     responseMonad.map(responseMonad.handleError(delegate.send(request)) {
-      case _: ReadException => responseMonad.eval(Response(1.asInstanceOf[T],StatusCode.RequestTimeout))
       case NonFatal(e) =>
         logger.error(s"Exception when sending request: $request", e)
         responseMonad.error(e)
