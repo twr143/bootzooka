@@ -106,7 +106,7 @@ case class FileStreamingApi(http: Http, auth: Auth[ApiKey], config: FSConfig)(im
         .map(_.toByte)
         .onFinalize(Task(logger.warn("stream finalized")))
         .pure[Task]
-        .map(s => ("bytes", s"bytes 0-$size/$size", s"$size", sttp.model.StatusCode.unsafeApply(206), s))
+        .map(s => ("bytes", s"bytes 0-$size/$size", s"$size", StatusCode.PartialContent, s))
       _ <- Task.now(logger.warn("task finished working"))
     } yield r
   }
@@ -142,6 +142,11 @@ case class FileStreamingApi(http: Http, auth: Auth[ApiKey], config: FSConfig)(im
     .out(streamBody[EntityBody[Task]](schemaFor[Byte], CodecFormat.OctetStream()))
     .serverLogic(streamingFileK mapF toOutF run)
 
+  private val notImplementedEndpoint = baseEndpoint.get
+    .in(fsPath / "ni")
+    .out(statusCode)
+    .serverLogic(_ => toOutF(Task.now(StatusCode.NotImplemented)))
+
   val endpoints: ServerEndpoints =
     NonEmptyList
       .of(
@@ -149,7 +154,8 @@ case class FileStreamingApi(http: Http, auth: Auth[ApiKey], config: FSConfig)(im
         fileUploadEndpoint,
         fileRetrievalEndpoint,
         streamingEndpoint,
-        streamingFileEndpoint
+        streamingFileEndpoint,
+        notImplementedEndpoint
       )
       .map(_.tag("huts"))
 }

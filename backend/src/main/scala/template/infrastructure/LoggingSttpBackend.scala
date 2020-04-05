@@ -28,7 +28,7 @@ class LoggingSttpBackend[F[_], S, WS_HANDLER[_]](delegate: SttpBackend[F, S, WS_
   }
   override def openWebsocket[T, WS_RESULT](request: Request[T, S], handler: WS_HANDLER[WS_RESULT]): F[WebSocketResponse[WS_RESULT]] = {
     responseMonad.map(responseMonad.handleError(delegate.openWebsocket(request, handler)) {
-      case e: Exception =>
+      case NonFatal(e) =>
         logger.error(s"Exception when opening websocket: $request", e)
         responseMonad.error(e)
     }) { response =>

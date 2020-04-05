@@ -58,8 +58,8 @@ class Http() extends Tapir with TapirJsonCirce with TapirSchemas with StrictLogg
   def exceptionToErrorOut(e: Throwable): (StatusCode, Error_OUT) = {
     val (statusCode, message) = e match {
       case f: Fail => failToResponseData(f)
-      case _: ReadException => (StatusCode.RequestTimeout,List("read"))
-      case _: ConnectException => (StatusCode.RequestTimeout,List("connect"))
+      case re: ReadException => (StatusCode.RequestTimeout,List(s"read ${re.getMessage}"))
+      case ce: ConnectException => (StatusCode.RequestTimeout,List(s"connect ${ce.getMessage}"))
       case _ =>
         logger.error("Exception when processing request", e)
         InternalServerError
