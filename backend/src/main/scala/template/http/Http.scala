@@ -39,7 +39,7 @@ class Http() extends Tapir with TapirJsonCirce with TapirSchemas with StrictLogg
     * Base endpoint description for secured endpoints. Specifies that errors are always returned as JSON values
     * corresponding to the [[Error_OUT]] class, and that authentication is read from the `Authorization: Bearer` header.
     */
-  val secureEndpoint: Endpoint[ /*(Id,Id)*/ Id, (StatusCode, Error_OUT), Unit, Nothing] =
+  val secureEndpoint: Endpoint[ Id, (StatusCode, Error_OUT), Unit, Nothing] =
     baseEndpoint.in(auth.bearer.map(_.asInstanceOf[Id])(identity))
   //
   private val InternalServerError = (StatusCode.InternalServerError, List("Internal server error"))
