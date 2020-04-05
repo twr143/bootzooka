@@ -54,7 +54,7 @@ class Http() extends Tapir with TapirJsonCirce with TapirSchemas with StrictLogg
     case Fail.UnauthorizedM(msg)    => (StatusCode.Unauthorized, List(msg))
     case _                          => InternalServerError
   }
-
+//
   def exceptionToErrorOut(e: Throwable): (StatusCode, Error_OUT) = {
     val (statusCode, message) = e match {
       case f: Fail => failToResponseData(f)
