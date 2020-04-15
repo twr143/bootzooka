@@ -18,7 +18,7 @@ object DummyEmailSender extends EmailSender with StrictLogging {
       sentEmails += email
     }
 
-    logger.info(s"Would send email, if this wasn't a dummy email service implementation: $email")
+//    logger.info(s"Would send email, if this wasn't a dummy email service implementation: $email")
   }
 
   def findSentEmail(recipient: String, subjectContains: String): Option[EmailData] = this.synchronized {

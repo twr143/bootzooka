@@ -73,8 +73,8 @@ class HttpApi(
 
   private val staticFileBlocker = Blocker.liftExecutionContext(ExecutionContext.fromExecutorService(Executors.newFixedThreadPool(4)))
 
-  private def indexResponse[B[_]](r: Request[B])(implicit e: Effect[B], cs: ContextShift[B]): B[Response[B]] =
-    StaticFile.fromResource(s"/webapp/index.html", staticFileBlocker, Some(r)).getOrElseF(e.pure(Response.notFound))
+  private def indexResponse[B[_]:Effect:ContextShift](r: Request[B]): B[Response[B]] =
+    StaticFile.fromResource(s"/webapp/index.html", staticFileBlocker, Some(r)).getOrElseF(Effect[B].pure(Response.notFound))
 
   private val respondWithNotFound: HttpRoutes[Task] = Kleisli(_ => OptionT.pure(Response.notFound))
   private val respondWithIndex: HttpRoutes[Task] = Kleisli(req => OptionT.liftF(indexResponse(req)))

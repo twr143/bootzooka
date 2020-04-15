@@ -21,8 +21,9 @@ case class MultiFlowApi(http: Http) extends StrictLogging {
   private val mfPath = "mf"
 
   val multiFlowStringK: Kleisli[OptionT[Task, *], MFRequest, MFResponse] = Kleisli {
-    case MFRequestStr(s, _) => OptionT.liftF(Task.now(MFResponseString(s)))
-    case _                  => OptionT.none
+    case MFRequestStr(s, _)      => OptionT.liftF(Task.now(MFResponseString(s)))
+    case MFRequestStr2(_, s2, _) => OptionT.liftF(Task.now(MFResponseString(s2)))
+    case _                       => OptionT.none
   }
   val multiFlowIntK: Kleisli[OptionT[Task, *], MFRequest, MFResponse] = Kleisli {
     case MFRequestInt(s, _) => OptionT.liftF(Task.now(MFResponseInt(s)))
@@ -48,11 +49,12 @@ object MultiFlowApi extends AutoDerivation {
     def tp: String
   }
   case class MFRequestStr(s: String, tp: String = "MFRequestStr") extends MFRequest
+  case class MFRequestStr2(s: String, s2: String, tp: String = "MFRequestStr2") extends MFRequest
   case class MFRequestInt(s: Int, tp: String = "MFRequestInt") extends MFRequest
   implicit val encodeMFResponse: Encoder[MFResponse] = Encoder.instance {
-    case f: MFResponseString => f.asJson
-    case b: MFResponseInt    => b.asJson
-    case d: MFResponseDefault    => d.asJson
+    case f: MFResponseString  => f.asJson
+    case b: MFResponseInt     => b.asJson
+    case d: MFResponseDefault => d.asJson
   }
   implicit val codecMFRequest: Codec[MFRequest] = deriveConfiguredCodec
   sealed trait MFResponse

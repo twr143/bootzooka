@@ -157,7 +157,7 @@ case class FileStreamingApi(http: Http, auth: Auth[ApiKey], config: FSConfig)(im
         streamingFileEndpoint,
         notImplementedEndpoint
       )
-      .map(_.tag("huts"))
+      .map(_.tag("fileStorage"))
 }
 
 object FileStreamingApi {
