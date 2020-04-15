@@ -46,6 +46,10 @@ class UserModel {
 
   def updateEmail(userId: Id @@ User, newEmail: String @@ LowerCased): ConnectionIO[Unit] =
     sql"""UPDATE users SET email_lowercase = $newEmail WHERE id = $userId""".stripMargin.update.run.void
+
+  def deleteByLogin(login: String): ConnectionIO[Int] =
+    sql"""DELETE from users where login = $login""".stripMargin.update.run
+
 }
 
 case class User(
@@ -63,5 +67,5 @@ case class User(
 
 object User {
   def hashPassword(password: String): String =
-    password//SCrypt.hashpw[cats.Id](password)
+    password //SCrypt.hashpw[cats.Id](password)
 }

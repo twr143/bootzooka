@@ -89,6 +89,20 @@ class UserApi(http: Http, auth: Auth[ApiKey], userService: UserService, xa: Tran
     .out(jsonBody[UpdateUser_OUT])
     .serverLogic(auth.checkUser >>> updateK mapF toOutF run)
 
+  val deleteUserK: Kleisli[Task, DeleteUser_IN, DeleteUser_OUT] = Kleisli {
+    dui =>
+      for {
+        result <- userService.deleteUser(dui.login).transact(xa)
+      } yield DeleteUser_OUT(count = result)
+  }
+
+  private val deleteUserEndpoint = baseEndpoint.post
+    .in(UserPath / "delete")
+    .in(jsonBody[DeleteUser_IN])
+    .out(jsonBody[DeleteUser_OUT])
+    .serverLogic(deleteUserK mapF toOutF run)
+
+
   val endpoints: ServerEndpoints =
     NonEmptyList
       .of(
@@ -96,7 +110,8 @@ class UserApi(http: Http, auth: Auth[ApiKey], userService: UserService, xa: Tran
         loginEndpoint,
         changePasswordEndpoint,
         getUserEndpoint,
-        updateUserEndpoint
+        updateUserEndpoint,
+        deleteUserEndpoint
       )
       .map(_.tag("user"))
 }
@@ -116,4 +131,9 @@ object UserApi {
   case class UpdateUser_OUT()
 
   case class GetUser_OUT(login: String, email: String @@ LowerCased, createdOn: Instant)
+
+  case class DeleteUser_IN(login:String)
+  case class DeleteUser_OUT(count:Int)
+
+
 }

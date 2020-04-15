@@ -21,6 +21,11 @@ class ApiKeyService(apiKeyModel: ApiKeyModel, idGenerator: IdGenerator, clock: C
     logger.debug(s"Creating a new api key for user $userId, valid until: $validUntil")
     apiKeyModel.insert(apiKey).map(_ => apiKey)
   }
+  def delete(userId: Id @@ User): ConnectionIO[Int] = {
+    logger.debug(s"Deleting a new api key for user $userId")
+    apiKeyModel.deleteByUserId(userId)
+  }
+
 }
 
 case class ApiKey(id: Id @@ ApiKey, userId: Id @@ User, createdOn: Instant, validUntil: Instant)

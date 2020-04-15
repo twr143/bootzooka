@@ -67,6 +67,13 @@ class UserService(
     } yield apiKey
   }
 
+  def deleteUser(login: String): ConnectionIO[Int] =
+    for {
+      user <- userOrNotFound(userModel.findByLogin(login.lowerCased))
+      keyApiResult <- apiKeyService.delete(user.id)
+      userApiResult <- userModel.deleteByLogin(login)
+    } yield keyApiResult & userApiResult
+
   def findById(id: Id @@ User): ConnectionIO[User] = userOrNotFound(userModel.findById(id))
 
   def login(loginOrEmail: String, password: String, apiKeyValid: Option[Duration]): ConnectionIO[ApiKey] =
