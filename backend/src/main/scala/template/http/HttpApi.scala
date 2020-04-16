@@ -51,8 +51,10 @@ class HttpApi(
     * The resource describing the HTTP server; binds when the resource is allocated.
     */
   lazy val resource: Resource[Task, Server[Task]] = {
+    val classifierFunc = (r: Request[Task]) => Some(r.uri.path.toString.toLowerCase)
     val prometheusHttp4sMetrics = Prometheus.metricsOps[Task](collectorRegistry, "iv_template_server")
-    prometheusHttp4sMetrics.map(m => Metrics[Task](m)(mainRoutes))
+    prometheusHttp4sMetrics
+      .map(m => Metrics[Task](m, Status.NotFound.some, _ => Status.InternalServerError.some, classifierFunc)(mainRoutes))
       .>>= { monitoredRoutes =>
         val app: HttpApp[Task] = Router(
           // for /api/v1 requests, first trying the API; then the docs; then, returning 404
@@ -73,7 +75,7 @@ class HttpApi(
 
   private val staticFileBlocker = Blocker.liftExecutionContext(ExecutionContext.fromExecutorService(Executors.newFixedThreadPool(4)))
 
-  private def indexResponse[B[_]:Effect:ContextShift](r: Request[B]): B[Response[B]] =
+  private def indexResponse[B[_]: Effect: ContextShift](r: Request[B]): B[Response[B]] =
     StaticFile.fromResource(s"/webapp/index.html", staticFileBlocker, Some(r)).getOrElseF(Effect[B].pure(Response.notFound))
 
   private val respondWithNotFound: HttpRoutes[Task] = Kleisli(_ => OptionT.pure(Response.notFound))
