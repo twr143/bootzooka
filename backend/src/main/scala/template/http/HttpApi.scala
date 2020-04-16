@@ -51,7 +51,7 @@ class HttpApi(
     * The resource describing the HTTP server; binds when the resource is allocated.
     */
   lazy val resource: Resource[Task, Server[Task]] = {
-    val classifierFunc = (r: Request[Task]) => Some(r.uri.path.toString.toLowerCase)
+    val classifierFunc = (r: Request[Task]) => r.uri.path.toString.toLowerCase.some
     val prometheusHttp4sMetrics = Prometheus.metricsOps[Task](collectorRegistry, "iv_template_server")
     prometheusHttp4sMetrics
       .map(m => Metrics[Task](m, Status.NotFound.some, _ => Status.InternalServerError.some, classifierFunc)(mainRoutes))
@@ -69,7 +69,7 @@ class HttpApi(
         BlazeServerBuilder[Task]
           .bindHttp(config.port, config.host)
           .withHttpApp(app)
-          .resource
+        .resource
       }
   }
 

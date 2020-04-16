@@ -29,7 +29,7 @@ class UserApi(http: Http, auth: Auth[ApiKey], userService: UserService, xa: Tran
         _ <- Task(Metrics.registeredUsersCounter.inc())
       } yield Register_OUT(apiKey.id)
     }
-
+//irate(iv_template_server_request_count{instance="localhost:8080",job="prometheus",method="post",status="2xx", classifier="/api/v1/user/register"}[10m])
   private val registerUserEndpoint = baseEndpoint.post
     .in(UserPath / "register")
     .in(jsonBody[Register_IN])
@@ -95,7 +95,7 @@ class UserApi(http: Http, auth: Auth[ApiKey], userService: UserService, xa: Tran
         result <- userService.deleteUser(dui.login).transact(xa)
       } yield DeleteUser_OUT(count = result)
   }
-
+//irate(iv_template_server_request_count{instance="localhost:8080",job="prometheus",method="post",status="2xx", classifier="/api/v1/user/delete"}[5m])
   private val deleteUserEndpoint = baseEndpoint.post
     .in(UserPath / "delete")
     .in(jsonBody[DeleteUser_IN])
