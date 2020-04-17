@@ -9,7 +9,6 @@ import template.infrastructure.Doobie._
 import template.user.User
 import template.util.Id
 
-
 class ApiKeyModel {
 
   def insert(apiKey: ApiKey): ConnectionIO[Unit] = {
