@@ -16,7 +16,7 @@ val circeVersion = "0.12.3"
 val tsecVersion = "0.1.0"
 val sttpVersion = "2.0.7"
 val prometheusVersion = "0.8.1"
-val tapirVersion = "0.13.0"
+val tapirVersion = "0.13.2"
 
 val dbDependencies = Seq(
   "org.tpolecat" %% "doobie-core" % doobieVersion,
@@ -210,7 +210,7 @@ lazy val rootProject = (project in file("."))
 lazy val backend: Project = (project in file("backend"))
   .settings(
     libraryDependencies ++= dbDependencies ++ httpDependencies ++ jsonDependencies ++ apiDocsDependencies ++ monitoringDependencies
-      ++ securityDependencies ++ emailDependencies ++ fs2Deps,
+      ++ securityDependencies ++ emailDependencies/** ++ fs2Deps**/,
     mainClass in Compile := Some("template.Main")
   )
   .enablePlugins(BuildInfoPlugin)

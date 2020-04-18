@@ -35,13 +35,14 @@ class HttpApi(
     http: Http,
     endpoints: ServerEndpoints,
     adminEndpoints: ServerEndpoints,
+    serviceEndpoints: ServerEndpoints,
     collectorRegistry: CollectorRegistry,
     config: HttpConfig
 ) {
   private val apiContextPath = "/api/v1"
   private val endpointsToRoutes = new EndpointsToRoutes(http, apiContextPath)
 
-  lazy val mainRoutes: HttpRoutes[Task] = CorrelationId.setCorrelationIdMiddleware(endpointsToRoutes(endpoints))
+  lazy val mainRoutes: HttpRoutes[Task] = CorrelationId.setCorrelationIdMiddleware(endpointsToRoutes(endpoints concatNel serviceEndpoints))
   private lazy val adminRoutes: HttpRoutes[Task] = endpointsToRoutes(adminEndpoints)
   private lazy val docsRoutes: HttpRoutes[Task] = endpointsToRoutes.toDocsRoutes(endpoints)
 
@@ -69,7 +70,7 @@ class HttpApi(
         BlazeServerBuilder[Task]
           .bindHttp(config.port, config.host)
           .withHttpApp(app)
-        .resource
+          .resource
       }
   }
 

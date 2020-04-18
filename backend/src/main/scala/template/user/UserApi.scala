@@ -89,18 +89,6 @@ class UserApi(http: Http, auth: Auth[ApiKey], userService: UserService, xa: Tran
     .out(jsonBody[UpdateUser_OUT])
     .serverLogic(auth.checkUser >>> updateK mapF toOutF run)
 
-  val deleteUserK: Kleisli[Task, DeleteUser_IN, DeleteUser_OUT] = Kleisli {
-    dui =>
-      for {
-        result <- userService.deleteUser(dui.login).transact(xa)
-      } yield DeleteUser_OUT(count = result)
-  }
-//irate(iv_template_server_request_count{instance="localhost:8080",job="prometheus",method="post",status="2xx", classifier="/api/v1/user/delete"}[5m])
-  private val deleteUserEndpoint = baseEndpoint.post
-    .in(UserPath / "delete")
-    .in(jsonBody[DeleteUser_IN])
-    .out(jsonBody[DeleteUser_OUT])
-    .serverLogic(deleteUserK mapF toOutF run)
 
 
   val endpoints: ServerEndpoints =
@@ -110,8 +98,7 @@ class UserApi(http: Http, auth: Auth[ApiKey], userService: UserService, xa: Tran
         loginEndpoint,
         changePasswordEndpoint,
         getUserEndpoint,
-        updateUserEndpoint,
-        deleteUserEndpoint
+        updateUserEndpoint
       )
       .map(_.tag("user"))
 }

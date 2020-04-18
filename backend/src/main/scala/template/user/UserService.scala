@@ -67,10 +67,6 @@ class UserService(
     } yield apiKey
   }
 
-  def deleteUser(login: String): ConnectionIO[Int] =
-    for {
-      userApiResult <- userModel.deleteByLogin(login) //api key will be deleted on cascade
-    } yield  userApiResult
 
   def findById(id: Id @@ User): ConnectionIO[User] = userOrNotFound(userModel.findById(id))
 

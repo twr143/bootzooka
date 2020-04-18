@@ -47,9 +47,6 @@ class UserModel {
   def updateEmail(userId: Id @@ User, newEmail: String @@ LowerCased): ConnectionIO[Unit] =
     sql"""UPDATE users SET email_lowercase = $newEmail WHERE id = $userId""".stripMargin.update.run.void
 
-  def deleteByLogin(login: String): ConnectionIO[Int] =
-//    (fr"""DELETE from users where login = """ ++ Fragment.const(login)).stripMargin.update.run
-    sql"""DELETE from users where login = $login""".stripMargin.update.run
 
 }
 
