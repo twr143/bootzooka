@@ -33,7 +33,14 @@ object Main extends StrictLogging {
         it (so that the http server is available
           as long as our application runs)
          */
-        modules.startBackgroundProcesses >> modules.httpApi.resource.use(_ => Task.never)
+        modules.startBackgroundProcesses >> modules.httpApi.resource.use(_ =>
+          Task.delay {
+            logger.warn("Press Ctrl+Z to exit...")
+            while (System.in.read() != -1) {}
+            logger.warn("Received end-of-file on stdin. Exiting")
+            // optional shutdown code here
+          }
+        ) >> Task.now(System.exit(0))
       }
     }
     mainTask.runSyncUnsafe()

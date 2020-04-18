@@ -127,7 +127,9 @@ lazy val commonSettings = commonSmlBuildSettings ++ Seq(
   scalacOptions ++= List(
     "-Yrangepos", // required by SemanticDB compiler plugin
     "-Ywarn-unused-import" // required by `RemoveUnused` rule
-  )
+  ),
+  fork in run := true,
+  connectInput in run := true
 )
 
 lazy val buildInfoSettings = Seq(
