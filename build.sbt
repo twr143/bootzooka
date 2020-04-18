@@ -12,7 +12,7 @@ import complete.DefaultParsers._
 
 val doobieVersion = "0.8.6"
 val http4sVersion = "0.21.3"
-val circeVersion = "0.12.3"
+val circeVersion = "0.13.0"
 val tsecVersion = "0.1.0"
 val sttpVersion = "2.0.7"
 val prometheusVersion = "0.8.1"
