@@ -10,6 +10,12 @@ import template.user.UserConfig
 /**
   * Maps to the `application.conf` file. Configuration for all modules of the application.
   */
-case class Config(db: DBConfig, api: HttpConfig, email: EmailConfig,
-                  passwordReset: PasswordResetConfig,
-                  user: UserConfig, fsService: FSConfig)
+case class Config(
+    env: Env,
+    db: DBConfig,
+    api: HttpConfig,
+    email: EmailConfig,
+    passwordReset: PasswordResetConfig,
+    user: UserConfig,
+    fsService: FSConfig
+)

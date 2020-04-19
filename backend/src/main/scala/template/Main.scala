@@ -34,12 +34,14 @@ object Main extends StrictLogging {
           as long as our application runs)
          */
         modules.startBackgroundProcesses >> modules.httpApi.resource.use(_ =>
-          Task.delay {
-            logger.warn("Press Ctrl+Z to exit...")
-            while (System.in.read() != -1) {}
-            logger.warn("Received end-of-file on stdin. Exiting")
-            // optional shutdown code here
-          }
+          if ("DEV".equalsIgnoreCase(initModule.config.env.mode))
+            Task.delay {
+              logger.warn(s"${System.getProperty("os.name")} Press Ctrl+Z to exit...")
+              while (System.in.read() != -1) {}
+              logger.warn("Received end-of-file on stdin. Exiting")
+              // optional shutdown code here
+            }
+          else Task.never
         ) >> Task.now(System.exit(0))
       }
     }

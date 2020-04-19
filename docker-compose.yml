@@ -13,6 +13,7 @@ services:
       SQL_HOST: 'bootzooka-db'
       SQL_PORT: '5432'
       API_HOST: '0.0.0.0'
+      ENV_MODE: 'PROD'
   bootzooka-db:
     image: 'postgres'
     ports:
