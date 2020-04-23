@@ -1,10 +1,12 @@
 package template.multiflow
+import java.sql.Connection
 import java.time.Clock
 
 import cats.effect.{Blocker, Resource}
 import doobie.free.KleisliInterpreter
 import doobie.util.transactor.Strategy
 import monix.eval.Task
+import org.flywaydb.core.internal.database.postgresql.PostgreSQLConnection
 import org.scalatest.concurrent.Eventually
 import sttp.client.{NothingT, SttpBackend}
 import sttp.client.impl.monix.TaskMonadAsyncError
@@ -24,7 +26,7 @@ class MultiFlowTest extends BaseTest with Eventually {
   lazy val modules: MainModule = new MainModule {
     override def xa: Transactor[Task] = Transactor(
       (),
-      (_: Unit) => Resource.pure(null),
+      (_:Unit) => Resource.pure[Task,Connection](null),
       KleisliInterpreter[Task](Blocker.liftExecutionContext(ExecutionContext.global)).ConnectionInterpreter,
       Strategy.void
     )

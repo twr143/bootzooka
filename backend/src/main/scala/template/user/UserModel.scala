@@ -4,9 +4,8 @@ import java.time.Instant
 
 import cats.implicits._
 import template.infrastructure.Doobie._
-import template.util.{Id, LowerCased}
+import template.util.{Hashing, Id, LowerCased}
 import com.softwaremill.tagging.@@
-import template.util.LowerCased
 import tsec.common.{VerificationFailed, VerificationStatus, Verified}
 
 class UserModel {
@@ -60,10 +59,10 @@ case class User(
 ) {
 
   def verifyPassword(password: String): VerificationStatus =
-    if (password.equalsIgnoreCase(passwordHash)) Verified else VerificationFailed
+    if (User.hashPassword(password).equals(passwordHash)) Verified else VerificationFailed
 }
 
 object User {
   def hashPassword(password: String): String =
-    password //SCrypt.hashpw[cats.Id](password)
+    Hashing.digest(password)
 }
