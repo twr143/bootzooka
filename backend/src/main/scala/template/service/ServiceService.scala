@@ -12,7 +12,8 @@ class ServiceService(serviceModel: ServiceModel) extends StrictLogging {
       userApiResult <- serviceModel.deleteByLogin(login) //api key will be deleted on cascade
     } yield  userApiResult
 
-  def queryUsers(by: String): ConnectionIO[List[User]] =
-      serviceModel.query(by)
-
+  def queryUsers(by: String): ConnectionIO[List[User]] = {
+    logger.debug("queried: {}", by)
+    serviceModel.query(by)
+  }
 }

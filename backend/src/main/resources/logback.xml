@@ -29,6 +29,17 @@
       </root>
     </then>
   </if>
+  <appender name="FILE" class="ch.qos.logback.core.FileAppender">
+    <file>../testFile.log</file>
+    <append>true</append>
+    <!-- set immediateFlush to false for much higher logging throughput -->
+    <immediateFlush>true</immediateFlush>
+    <!-- encoders are assigned the type
+         ch.qos.logback.classic.encoder.PatternLayoutEncoder by default -->
+    <encoder>
+      <pattern>%d{HH:mm:ss.SSS} %X{cid} %logger{5} - %msg%n%rEx</pattern>
+    </encoder>
+  </appender>
 
   <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
     <encoder>
@@ -36,12 +47,14 @@
     </encoder>
   </appender>
 
-  <logger name="com.softwaremill.bootzooka" level="${LOG_LEVEL:-DEBUG}" additivity="false">
+  <logger name="template" level="${LOG_LEVEL:-DEBUG}" additivity="false">
     <appender-ref ref="STDOUT"/>
+    <appender-ref ref="FILE"/>
   </logger>
 
   <root level="${LOG_LEVEL:-INFO}">
     <appender-ref ref="STDOUT"/>
+    <appender-ref ref="FILE"/>
   </root>
 
 </configuration>
