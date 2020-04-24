@@ -60,6 +60,7 @@ case class User(
 
   def verifyPassword(password: String): VerificationStatus =
     if (User.hashPassword(password).equals(passwordHash)) Verified else VerificationFailed
+
 }
 
 object User {
