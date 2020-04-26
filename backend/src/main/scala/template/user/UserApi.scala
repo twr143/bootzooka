@@ -1,12 +1,14 @@
 package template.user
 
 import java.time.Instant
+
 import cats.implicits._
 import template.util._
 import cats.data.{Kleisli, NonEmptyList}
 import com.softwaremill.tagging.@@
 import doobie.util.transactor.Transactor
 import monix.eval.Task
+import template.Fail
 import template.http.Http
 import template.metrics.Metrics
 import template.security._
@@ -14,6 +16,7 @@ import template.util.LowerCased
 import template.infrastructure.Json._
 import template.infrastructure.Doobie._
 import template.util.IdUtils._
+
 import scala.concurrent.duration._
 
 class UserApi(http: Http, auth: Auth[ApiKey], userService: UserService, xa: Transactor[Task]) {
@@ -25,16 +28,23 @@ class UserApi(http: Http, auth: Auth[ApiKey], userService: UserService, xa: Tran
   val registerUserK: Kleisli[Task, Register_IN, Register_OUT] = Kleisli {
     case data: Register_IN =>
       for {
+        _ <- UserRegisterValidator
+          .validate(data.login, data.email, data.password)
+          .fold(
+            msg => Fail.IncorrectInputL(msg.map(_.errorMessage).toList).raiseError[Task, Unit],
+            _ => ().pure[Task]
+          )
+
         apiKey <- userService.registerNewUser(data.login, data.email, data.password).transact(xa)
         _ <- Task(Metrics.registeredUsersCounter.inc())
       } yield Register_OUT(apiKey.id)
-    }
+  }
 //irate(iv_template_server_request_count{instance="localhost:8080",job="prometheus",method="post",status="2xx", classifier="/api/v1/user/register"}[10m])
   private val registerUserEndpoint = baseEndpoint.post
     .in(UserPath / "register")
     .in(jsonBody[Register_IN])
     .out(jsonBody[Register_OUT])
-    .serverLogic ( registerUserK mapF toOutF run)
+    .serverLogic(registerUserK mapF toOutF run)
 
   val loginK: Kleisli[Task, Login_IN, Login_OUT] = Kleisli {
     case data: Login_IN =>
@@ -89,8 +99,6 @@ class UserApi(http: Http, auth: Auth[ApiKey], userService: UserService, xa: Tran
     .out(jsonBody[UpdateUser_OUT])
     .serverLogic(auth.checkUser >>> updateK mapF toOutF run)
 
-
-
   val endpoints: ServerEndpoints =
     NonEmptyList
       .of(
@@ -119,8 +127,7 @@ object UserApi {
 
   case class GetUser_OUT(login: String, email: String @@ LowerCased, createdOn: Instant)
 
-  case class DeleteUser_IN(login:String)
-  case class DeleteUser_OUT(count:Int)
-
+  case class DeleteUser_IN(login: String)
+  case class DeleteUser_OUT(count: Int)
 
 }

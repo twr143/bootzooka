@@ -15,6 +15,7 @@ import template.util._
 import scala.concurrent.duration.Duration
 import cats.data.ValidatedNec
 import cats.implicits._
+import monix.eval.Task
 
 class UserService(
     userModel: UserModel,
@@ -55,18 +56,10 @@ class UserService(
     }
 
     for {
-      _ <- UserRegisterValidator
-        .validate(login, email, password)
-        .fold(msg => {
-          Fail
-            .IncorrectInputL(msg.map(_.errorMessage).toList)
-            .raiseError[ConnectionIO, Unit]
-        }, _ => ().pure[ConnectionIO])
       _ <- checkUserDoesNotExist()
       apiKey <- doRegister()
     } yield apiKey
   }
-
 
   def findById(id: Id @@ User): ConnectionIO[User] = userOrNotFound(userModel.findById(id))
 
