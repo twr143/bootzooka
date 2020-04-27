@@ -13,7 +13,7 @@ import template.infrastructure.Doobie._
 import template.util._
 
 import scala.concurrent.duration.Duration
-import cats.data.ValidatedNec
+import cats.data.{NonEmptySet, Validated, ValidatedNec}
 import cats.implicits._
 import monix.eval.Task
 
@@ -121,45 +121,34 @@ class UserService(
 }
 
 object UserRegisterValidator {
+  import template.util.ValidationUtils._
 
   Right(())
 
   val MinLoginLength = 3
+  val shortLogin = "Login is too short!"
+  val alfaNumericLogin = "Login should be alfa-numeric!"
+  val emptyPass = "Password cannot be empty!"
+  val invalidEmail = "Invalid e-mail!"
 
-  def validate(login: String, email: String, password: String): ValidationResult[Unit] =
-    (validLogin(login.trim), validEmail(email.trim), validPassword(password.trim)).mapN((_, _, _) => ())
-
-  private def validLogin(login: String): ValidationResult[String] =
-    if (login.length >= MinLoginLength) login.validNec else ShortLogin.invalidNec
+  def validate(login: String, email: String, password: String): Validated[NonEmptySet[String], String] = {
+    val fields = Map("l" -> login.trim, "p" -> password.trim, "e" -> email.trim)
+    val rules = List(
+      Rule("l", true, l => if (l.asInstanceOf[String].length >= MinLoginLength) "" else shortLogin),
+      Rule("l", true, l => if (l.asInstanceOf[String].matches("^[a-zA-Z0-9]+$")) "" else alfaNumericLogin),
+      Rule("p", true, p => if (p.asInstanceOf[String].nonEmpty) "" else emptyPass),
+      Rule(
+        "e",
+        true,
+        e =>
+          if (emailRegex.findFirstMatchIn(e.asInstanceOf[String]).isDefined) ""
+          else invalidEmail
+      )
+    )
+    validateFields(fields, rules)
+  }
 
   private val emailRegex =
     """^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$""".r
 
-  private def validEmail(email: String): ValidationResult[String] =
-    if (emailRegex.findFirstMatchIn(email).isDefined) email.validNec else InvalidEmail.invalidNec
-
-  private def validPassword(password: String): ValidationResult[String] =
-    if (password.nonEmpty) password.validNec else EmptyPassword.invalidNec
-
-  sealed trait UserValidation {
-
-    def errorMessage: String
-  }
-
-  case object ShortLogin extends UserValidation {
-
-    def errorMessage: String = "Login is too short!"
-  }
-
-  case object InvalidEmail extends UserValidation {
-
-    def errorMessage: String = "Invalid e-mail!"
-  }
-
-  case object EmptyPassword extends UserValidation {
-
-    def errorMessage: String = "Password cannot be empty!"
-  }
-
-  type ValidationResult[A] = ValidatedNec[UserValidation, A]
 }

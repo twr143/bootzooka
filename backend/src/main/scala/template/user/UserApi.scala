@@ -31,7 +31,7 @@ class UserApi(http: Http, auth: Auth[ApiKey], userService: UserService, xa: Tran
         _ <- UserRegisterValidator
           .validate(data.login, data.email, data.password)
           .fold(
-            msg => Fail.IncorrectInputL(msg.map(_.errorMessage).toList).raiseError[Task, Unit],
+            msg => Fail.IncorrectInputL(msg.toList).raiseError[Task, Unit],
             _ => ().pure[Task]
           )
 
