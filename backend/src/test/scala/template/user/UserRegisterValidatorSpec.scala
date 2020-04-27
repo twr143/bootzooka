@@ -1,7 +1,6 @@
 package template.user
 
 import cats.implicits._
-import cats.data.Chain
 import cats.data._
 import cats.data.Validated._
 import org.scalatest.{FlatSpec, Matchers}

@@ -131,7 +131,7 @@ object UserRegisterValidator {
   val emptyPass = "Password cannot be empty!"
   val invalidEmail = "Invalid e-mail!"
 
-  def validate(login: String, email: String, password: String): Validated[NonEmptySet[String], String] = {
+  def validate(login: String, email: String, password: String): ValidatedNes[String, String] = {
     val fields = Map("l" -> login.trim, "p" -> password.trim, "e" -> email.trim)
     val rules = List(
       Rule("l", true, l => if (l.asInstanceOf[String].length >= MinLoginLength) "" else shortLogin),
