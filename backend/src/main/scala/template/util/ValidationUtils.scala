@@ -1,5 +1,5 @@
 package template.util
-import cats.data.{NonEmptySet, Validated, ValidatedNec}
+import cats.data._
 import cats.implicits._
 
 /**
@@ -19,7 +19,7 @@ object ValidationUtils {
     else "".valid
   }
 
-  def validateFields(fields: Map[String, Any], rules: List[Rule]): ValidatedNes[String, String] =
+  def validateFields(fields: Map[String, Any], rules: NonEmptyList[Rule]): ValidatedNes[String, String] =
     rules.foldLeft("".valid[NonEmptySet[String]])((set, rule) => set.combine(validateField(fields, rule)))
 
 }

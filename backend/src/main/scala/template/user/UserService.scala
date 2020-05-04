@@ -13,7 +13,7 @@ import template.infrastructure.Doobie._
 import template.util._
 
 import scala.concurrent.duration.Duration
-import cats.data.{NonEmptySet, Validated, ValidatedNec}
+import cats.data._
 import cats.implicits._
 import monix.eval.Task
 
@@ -133,7 +133,7 @@ object UserRegisterValidator {
 
   def validate(login: String, email: String, password: String): ValidatedNes[String, String] = {
     val fields = Map("l" -> login.trim, "p" -> password.trim, "e" -> email.trim)
-    val rules = List(
+    val rules = NonEmptyList.of(
       Rule("l", true, l => if (l.asInstanceOf[String].length >= MinLoginLength) "" else shortLogin),
       Rule("l", true, l => if (l.asInstanceOf[String].matches("^[a-zA-Z0-9]+$")) "" else alfaNumericLogin),
       Rule("p", true, p => if (p.asInstanceOf[String].nonEmpty) "" else emptyPass),
