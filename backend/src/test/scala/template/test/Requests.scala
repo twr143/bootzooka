@@ -1,13 +1,23 @@
 package template.test
 
+import java.io.File
+import java.util.concurrent.Executors
+
+import cats.effect.Blocker
+import io.circe.Encoder
 import template.MainModule
 import template.infrastructure.Json._
 import template.user.UserApi._
 import monix.eval.Task
 import org.http4s._
 import org.http4s.syntax.all._
+import template.fileRetrieval.FileStreamingApi.HutBook
 import template.multiflow.MultiFlowApi.MFRequest
+import org.http4s.circe._
+import org.http4s.multipart.{Boundary, Multipart, Part}
+import sttp.tapir.Codec
 
+import scala.concurrent.ExecutionContext
 import scala.util.Random
 class Requests(val modules: MainModule) extends HttpTestSupport {
 
@@ -61,6 +71,22 @@ class Requests(val modules: MainModule) extends HttpTestSupport {
       .withEntity(UpdateUser_IN(login, email))
 
     modules.httpApi.mainRoutes(authorizedRequest(apiKey, request)).unwrap
+  }
+  private val fileBlocker = Blocker.liftExecutionContext(ExecutionContext.fromExecutorService(Executors.newFixedThreadPool(4)))
+
+  def uploadFile(apiKey: String, title: String, file: File): Response[Task] = {
+    import org.http4s.EntityEncoder._
+    val mp = Multipart[Task](Vector(Part.formData("title", title), Part.fileData("file", file, fileBlocker)), boundary = Boundary.create)
+    val entity = multipartEncoder[Task].toEntity(mp)
+    val request =
+      Request[Task](method = POST,
+        uri = uri"/fs/fu",
+        httpVersion = HttpVersion.`HTTP/1.1`,
+        headers = mp.headers,
+        body = entity.body)
+
+    modules.httpApi.mainRoutes(authorizedRequest(apiKey, request)).unwrap
+
   }
 
 }
