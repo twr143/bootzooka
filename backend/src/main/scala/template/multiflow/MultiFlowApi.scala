@@ -1,7 +1,6 @@
 package template.multiflow
 import com.typesafe.scalalogging.StrictLogging
 import monix.eval.Task
-import sttp.client.SttpBackend
 import template.http.Http
 import cats.data.{Kleisli, NonEmptyList, OptionT}
 import template.util.ServerEndpoints

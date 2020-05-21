@@ -15,7 +15,6 @@ import template.util._
 import scala.concurrent.duration.Duration
 import cats.data._
 import cats.implicits._
-import monix.eval.Task
 
 class UserService(
     userModel: UserModel,

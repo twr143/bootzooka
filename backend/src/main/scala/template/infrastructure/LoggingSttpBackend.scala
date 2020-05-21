@@ -1,15 +1,10 @@
 package template.infrastructure
 
-import cats.effect.Sync
 import com.typesafe.scalalogging.StrictLogging
-import sttp.client.SttpClientException.ReadException
 import sttp.client.monad.MonadError
 import sttp.client.ws.WebSocketResponse
 import sttp.client.{Request, Response, SttpBackend}
-import sttp.model.StatusCode
-import template.Fail
 
-import scala.reflect.ClassTag
 import scala.util.control.NonFatal
 
 class LoggingSttpBackend[F[_], S, WS_HANDLER[_]](delegate: SttpBackend[F, S, WS_HANDLER])

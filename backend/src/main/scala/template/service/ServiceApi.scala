@@ -2,7 +2,6 @@ package template.service
 import java.time.{Instant, LocalDateTime, ZoneOffset}
 import java.time.format.DateTimeFormatter
 
-import cats.implicits._
 import template.util._
 import cats.data.{Kleisli, NonEmptyList}
 import cats.data.NonEmptyList
@@ -13,21 +12,12 @@ import io.circe.generic.extras.Configuration
 import io.circe.generic.extras.semiauto._
 import monix.eval.Task
 import template.http.Http
-import template.user.{User, UserService}
 import template.util.ServerEndpoints
 import monix.eval.Task
-import sttp.tapir.Validator
 import template.http.Http
-import template.metrics.Metrics
-import template.security._
-import template.util.LowerCased
-import template.infrastructure.Json._
 import template.infrastructure.Doobie._
-import template.util.IdUtils._
 
-import scala.concurrent.duration._
 import io.circe.generic.extras.semiauto._
-import io.circe.syntax._
 
 /**
   * Created by Ilya Volynin on 18.04.2020 at 9:58.

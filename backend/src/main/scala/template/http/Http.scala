@@ -39,13 +39,14 @@ class Http() extends Tapir with TapirJsonCirce with TapirSchemas with StrictLogg
     * Base endpoint description for secured endpoints. Specifies that errors are always returned as JSON values
     * corresponding to the [[Error_OUT]] class, and that authentication is read from the `Authorization: Bearer` header.
     */
-  val secureEndpoint: Endpoint[ Id, (StatusCode, Error_OUT), Unit, Nothing] =
+  val secureEndpoint: Endpoint[Id, (StatusCode, Error_OUT), Unit, Nothing] =
     baseEndpoint.in(auth.bearer.map(_.asInstanceOf[Id])(identity))
   //
   private val InternalServerError = (StatusCode.InternalServerError, List("Internal server error"))
 
   private val failToResponseData: Fail => (StatusCode, List[String]) = {
     case Fail.NotFound(what)        => (StatusCode.NotFound, List(what))
+    case Fail.PayloadTooLarge(what) => (StatusCode.PayloadTooLarge, List(what))
     case Fail.Conflict(msg)         => (StatusCode.Conflict, List(msg))
     case Fail.IncorrectInput(msg)   => (StatusCode.BadRequest, List(msg))
     case Fail.IncorrectInputL(lmsg) => (StatusCode.BadRequest, lmsg)
@@ -57,9 +58,9 @@ class Http() extends Tapir with TapirJsonCirce with TapirSchemas with StrictLogg
 //
   def exceptionToErrorOut(e: Throwable): (StatusCode, Error_OUT) = {
     val (statusCode, message) = e match {
-      case f: Fail => failToResponseData(f)
-      case re: ReadException => (StatusCode.RequestTimeout,List(s"read ${re.getMessage}"))
-      case ce: ConnectException => (StatusCode.RequestTimeout,List(s"connect ${ce.getMessage}"))
+      case f: Fail              => failToResponseData(f)
+      case re: ReadException    => (StatusCode.RequestTimeout, List(s"read ${re.getMessage}"))
+      case ce: ConnectException => (StatusCode.RequestTimeout, List(s"connect ${ce.getMessage}"))
       case _ =>
         logger.error("Exception when processing request", e)
         InternalServerError

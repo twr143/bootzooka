@@ -5,7 +5,6 @@ import monix.eval.Task
 import sttp.client.Response
 import io.circe.parser.decode
 import com.typesafe.scalalogging.StrictLogging
-import sttp.tapir.EndpointOutput.StatusCode
 import template.Fail
 import template.Fail._
 
