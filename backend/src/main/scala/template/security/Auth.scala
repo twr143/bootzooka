@@ -38,7 +38,7 @@ class Auth[T](
         // random sleep to prevent timing attacks
         Timer[Task].sleep(random.nextInt(1000).millis) >> Task.raiseError(Fail.UnauthorizedM(id))
       case Some(token) =>
-        val delete = if (authTokenOps.deleteWhenValid) authTokenOps.delete(token).transact(xa) else Task.unit
+        val delete = Task.delay(authTokenOps.deleteWhenValid).ifM(authTokenOps.delete(token).transact(xa), Task.unit)
         delete >> Task.now((t, authTokenOps.userId(token)))
     }
   }

@@ -120,36 +120,24 @@ case class FileStreamingApi(http: Http, auth: Auth[ApiKey], config: FSConfig)(im
     .serverLogic(streamingK mapF toOutF run)
 
   private val streamReadFileBlocker = Blocker.liftExecutionContext(ExecutionContext.fromExecutorService(Executors.newFixedThreadPool(4)))
-
-  val streamingFileK: Kleisli[Task, String, (String, Stream[Task, Byte])] = Kleisli { file: String =>
+  type streamingFileKTOut = (String, Stream[Task, Byte])
+  val streamingFileK: Kleisli[Task, String, streamingFileKTOut] = Kleisli { file: String =>
     val fullPath = s"${config.fileStorage.baseDir}/$file"
-//    io.file
-//      .exists[Task](streamReadFileBlocker, Paths.get(fullPath))
-//      .>>=(does =>
-//        EitherT
-//          .cond[Task](does, (), ())
-//          .biSemiflatMap(
-//            _ => Task.raiseError[(String, Stream[Task, Byte])](Fail.NotFound(s"$file")),
-//            _ =>
-//              io.file
-//                .readAll[Task](Paths.get(fullPath), streamReadFileBlocker, 4096)
-//                .onFinalize(Task(logger.warn("file stream down finalized")))
-//                .pure[Task]
-//                .map(s => (s"attachment; filename=$file", s))
-//          )
-//          .fold(a => a, b => b)
-//      )
     for {
       exists <- io.file.exists[Task](streamReadFileBlocker, Paths.get(fullPath))
-      size <- if (exists) io.file.size[Task](streamReadFileBlocker, Paths.get(fullPath))
-      else Task.raiseError(Fail.NotFound(s"$file"))
-      r <- if (size < 8 * 1024L)
-        io.file
-          .readAll[Task](Paths.get(fullPath), streamReadFileBlocker, 4096)
-          .onFinalize(Task(logger.warn("file stream down finalized")))
-          .pure[Task]
-          .map(s => (s"attachment; filename=$file", s))
-      else Task.raiseError(Fail.PayloadTooLarge(s"$file size is > 8k"))
+      size <- Task
+        .delay(exists)
+        .ifM(io.file.size[Task](streamReadFileBlocker, Paths.get(fullPath)), Task.raiseError(Fail.NotFound(s"$file")))
+      r <- Task
+        .delay(size < 8 * 1024L)
+        .ifM(
+          io.file
+            .readAll[Task](Paths.get(fullPath), streamReadFileBlocker, 4096)
+            .onFinalize(Task(logger.warn("file stream down finalized")))
+            .pure[Task]
+            .map(s => (s"attachment; filename=$file", s)),
+          Task.raiseError(Fail.PayloadTooLarge(s"$file size is > 8k"))
+        )
     } yield r
 
   }
