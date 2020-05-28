@@ -67,7 +67,7 @@ class HttpApi(
           "" -> (webappRoutes <+> respondWithIndex)
         ).orNotFound
 
-        BlazeServerBuilder[Task]
+        BlazeServerBuilder[Task](global)
           .bindHttp(config.port, config.host)
           .withHttpApp(app)
           .resource
