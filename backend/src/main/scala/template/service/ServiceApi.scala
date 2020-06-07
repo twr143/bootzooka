@@ -5,6 +5,7 @@ import java.time.format.DateTimeFormatter
 import template.util._
 import cats.data.{Kleisli, NonEmptyList}
 import cats.data.NonEmptyList
+import cats.effect.concurrent.Ref
 import doobie.util.transactor.Transactor
 import io.circe.{Codec, Encoder}
 import io.circe.generic.AutoDerivation
@@ -16,16 +17,29 @@ import template.util.ServerEndpoints
 import monix.eval.Task
 import template.http.Http
 import template.infrastructure.Doobie._
-
 import io.circe.generic.extras.semiauto._
+import monix.execution.atomic.AtomicBoolean
+import sttp.model.StatusCode
 
 /**
   * Created by Ilya Volynin on 18.04.2020 at 9:58.
   */
-class ServiceApi(http: Http, serviceService: ServiceService, xa: Transactor[Task]) {
+class ServiceApi(http: Http, serviceService: ServiceService, xa: Transactor[Task], shutdownFlag: Ref[Task, Boolean]) {
   import ServiceApi._
   import http._
   private val UserPath = "user"
+  private val SystemPath = "system"
+  val shutdownK: Kleisli[Task, Unit, StatusCode] =
+    Kleisli { _ =>
+      for {
+        _ <- shutdownFlag.update(_ => true)
+        r <- Task.delay(StatusCode.Accepted)
+      } yield r
+    }
+  private val shutdownEndpoint = baseEndpoint.get
+    .in(SystemPath / "shutdown")
+    .out(statusCode)
+    .serverLogic(shutdownK mapF toOutF run)
 
   val deleteUserK: Kleisli[Task, DeleteUser_IN, DeleteUser_OUT] = Kleisli { dui =>
     for {
@@ -55,7 +69,8 @@ class ServiceApi(http: Http, serviceService: ServiceService, xa: Transactor[Task
     NonEmptyList
       .of(
         deleteUserEndpoint,
-        queryUsersEndpoint
+        queryUsersEndpoint,
+        shutdownEndpoint
       )
 
 }
@@ -64,7 +79,8 @@ object ServiceApi extends AutoDerivation {
   implicit val configuration: Configuration = Configuration.default.withDiscriminator("tp")
 //  implicit val codecInstant: Codec[Instant] = deriveConfiguredCodec
   val formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm:ss")
-  implicit val encodeInstant: Encoder[Instant] = Encoder.encodeString.contramap[Instant](i=>formatter.format(LocalDateTime.ofInstant(i, ZoneOffset.ofHours(3))))
+  implicit val encodeInstant: Encoder[Instant] =
+    Encoder.encodeString.contramap[Instant](i => formatter.format(LocalDateTime.ofInstant(i, ZoneOffset.ofHours(3))))
 
   implicit val codecUser: Codec[UserOut] = deriveConfiguredCodec
 
