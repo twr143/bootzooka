@@ -33,13 +33,6 @@ object Main extends StrictLogging {
             override def shutdownFlag: Ref[Task, Boolean] = sFlag
           }
 
-          /*
-        Sequencing two tasks using the >> operator:
-        - the first starts the background processes (such as an email sender)
-        - the second alocates the http api resource, and never releases
-        it (so that the http server is available
-          as long as our application runs)
-           */
           modules.startBackgroundProcesses >> modules.httpApi.resource.use(_ =>
             Task
               .now("DEV".equalsIgnoreCase(initModule.config.env.mode))
@@ -52,7 +45,7 @@ object Main extends StrictLogging {
                 },
                 Task.sleep(1 seconds).untilM_(sFlag.get)
               )
-          ) >> Task.now(System.exit(0))
+          )
         }
       }
     }
