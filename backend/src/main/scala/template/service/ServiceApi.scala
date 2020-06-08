@@ -18,7 +18,6 @@ import monix.eval.Task
 import template.http.Http
 import template.infrastructure.Doobie._
 import io.circe.generic.extras.semiauto._
-import monix.execution.atomic.AtomicBoolean
 import sttp.model.StatusCode
 
 /**

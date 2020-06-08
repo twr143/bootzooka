@@ -2,6 +2,7 @@ package template.multiflow
 import java.sql.Connection
 import java.time.Clock
 
+import cats.effect.concurrent.Ref
 import cats.effect.{Blocker, Resource}
 import doobie.free.KleisliInterpreter
 import doobie.util.transactor.Strategy
@@ -26,13 +27,14 @@ class MultiFlowTest extends BaseTest with Eventually {
   lazy val modules: MainModule = new MainModule {
     override def xa: Transactor[Task] = Transactor(
       (),
-      (_:Unit) => Resource.pure[Task,Connection](null),
+      (_: Unit) => Resource.pure[Task, Connection](null),
       KleisliInterpreter[Task](Blocker.liftExecutionContext(ExecutionContext.global)).ConnectionInterpreter,
       Strategy.void
     )
     override lazy val baseSttpBackend: SttpBackend[Task, Nothing, NothingT] = SttpBackendStub(TaskMonadAsyncError)
     override lazy val config: Config = TestConfig
     override lazy val clock: Clock = testClock
+    def shutdownFlag: Ref[Task, Boolean] = sFlag
   }
 
   val requests = new Requests(modules)

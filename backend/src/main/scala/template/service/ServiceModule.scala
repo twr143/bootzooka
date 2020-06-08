@@ -2,7 +2,6 @@ package template.service
 import cats.effect.concurrent.Ref
 import doobie.util.transactor.Transactor
 import monix.eval.Task
-import monix.execution.atomic.AtomicBoolean
 import template.email.{EmailScheduler, EmailTemplates}
 import template.http.Http
 import template.security.{ApiKey, ApiKeyService, Auth}

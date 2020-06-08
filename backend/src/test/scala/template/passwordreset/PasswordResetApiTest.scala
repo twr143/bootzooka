@@ -1,10 +1,11 @@
 package template.passwordreset
 
+import cats.effect.concurrent.Ref
 import template.email.sender.DummyEmailSender
 import template.infrastructure.Doobie._
 import template.infrastructure.Json._
 import template.passwordreset.PasswordResetApi.{ForgotPassword_IN, ForgotPassword_OUT, PasswordReset_IN, PasswordReset_OUT}
-import template.test.{BaseTest, Requests, TestConfig, TestEmbeddedPostgres}
+import template.test.{BaseTest, Requests, TestConfig, TestEmbeddedPostgres, sFlag}
 import template.MainModule
 import template.config.Config
 import monix.eval.Task
@@ -17,13 +18,13 @@ import sttp.client.testing.SttpBackendStub
 import sttp.client.{NothingT, SttpBackend}
 import template.email.sender.DummyEmailSender
 import template.passwordreset.PasswordResetApi.{ForgotPassword_OUT, PasswordReset_OUT}
-import template.test.{BaseTest, TestEmbeddedPostgres}
 
 class PasswordResetApiTest extends BaseTest with TestEmbeddedPostgres with Eventually {
   lazy val modules: MainModule = new MainModule {
     override def xa: Transactor[Task] = currentDb.xa
     override lazy val baseSttpBackend: SttpBackend[Task, Nothing, NothingT] = SttpBackendStub(TaskMonadAsyncError)
     override lazy val config: Config = TestConfig
+    def shutdownFlag: Ref[Task, Boolean] = sFlag
   }
 
   val requests = new Requests(modules)

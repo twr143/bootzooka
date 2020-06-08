@@ -4,9 +4,9 @@ import cats.effect.concurrent.Ref
 import cats.implicits._
 import com.typesafe.scalalogging.StrictLogging
 import doobie.util.transactor
+import fs2.concurrent.SignallingRef
 import monix.eval.Task
 import monix.execution.Scheduler.Implicits.global
-import monix.execution.atomic.AtomicBoolean
 import sttp.client.SttpBackend
 import template.config.Config
 import template.infrastructure.CorrelationId
@@ -24,7 +24,7 @@ object Main extends StrictLogging {
     initModule.logConfig()
 
     val mainTask = initModule.db.transactorResource.use { _xa =>
-      Ref.of[Task, Boolean](false).flatMap { sFlag =>
+      SignallingRef[Task, Boolean](false).flatMap { sFlag =>
         initModule.baseSttpBackend.use { _baseSttpBackend =>
           val modules = new MainModule {
             override def xa: transactor.Transactor[Task] = _xa

@@ -2,10 +2,11 @@ package template.user
 
 import java.time.Clock
 
+import cats.effect.concurrent.Ref
 import template.config.Config
 import template.email.sender.DummyEmailSender
 import template.MainModule
-import template.test.{BaseTest, Requests, TestConfig, TestEmbeddedPostgres}
+import template.test.{BaseTest, Requests, TestConfig, TestEmbeddedPostgres, sFlag}
 import monix.eval.Task
 import template.infrastructure.Doobie._
 import template.infrastructure.Json._
@@ -17,7 +18,6 @@ import sttp.client.impl.monix.TaskMonadAsyncError
 import sttp.client.testing.SttpBackendStub
 import sttp.client.{NothingT, SttpBackend}
 import template.email.sender.DummyEmailSender
-import template.test.{BaseTest, TestEmbeddedPostgres}
 
 import scala.concurrent.duration._
 class UserApiTest extends BaseTest with TestEmbeddedPostgres with Eventually {
@@ -26,6 +26,7 @@ class UserApiTest extends BaseTest with TestEmbeddedPostgres with Eventually {
     override lazy val baseSttpBackend: SttpBackend[Task, Nothing, NothingT] = SttpBackendStub(TaskMonadAsyncError)
     override lazy val config: Config = TestConfig
     override lazy val clock: Clock = testClock
+    override def shutdownFlag: Ref[Task, Boolean] = sFlag
   }
 
   val requests = new Requests(modules)

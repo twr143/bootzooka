@@ -3,6 +3,7 @@ import java.nio.charset.StandardCharsets
 import java.sql.Connection
 import java.time.Clock
 
+import cats.effect.concurrent.Ref
 import monix.eval.Task
 import org.http4s.Status
 import org.scalatest.concurrent.Eventually
@@ -17,7 +18,6 @@ import template.test._
 import template.user.UserApi.Register_OUT
 import template.infrastructure.Json._
 
-
 /**
   * Created by Ilya Volynin on 04.05.2020 at 19:10.
   */
@@ -27,6 +27,7 @@ class FilesApiTest extends BaseTest with TestEmbeddedPostgres with Eventually {
     override lazy val baseSttpBackend: SttpBackend[Task, Nothing, NothingT] = SttpBackendStub(TaskMonadAsyncError)
     override lazy val config: Config = TestConfig
     override lazy val clock: Clock = testClock
+    def shutdownFlag: Ref[Task, Boolean] = sFlag
   }
 
   val requests = new Requests(modules)
