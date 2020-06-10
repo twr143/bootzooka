@@ -22,3 +22,8 @@ services:
       POSTGRES_USER: 'postgres'
       POSTGRES_PASSWORD: 'b00t200k4'
       POSTGRES_DB: 'bootzooka'
+  swagger:
+    image: 'swaggerapi/swagger-ui'
+    ports:
+      - '3000:8080'
+ 

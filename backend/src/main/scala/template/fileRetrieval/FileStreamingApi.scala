@@ -111,12 +111,20 @@ case class FileStreamingApi(http: Http, auth: Auth[ApiKey], config: FSConfig)(im
     } yield r
   }
   private val streamingEndpoint = baseEndpoint.get
+    .description(
+      "Бессмысленный и беспощадный реквест частичного ответа. This is a get request currentlyl having no parameters (and payload)"
+    )
     .in(fsPath / "stream")
     .out(header[String]("Accept-Ranges"))
     .out(header[String]("Content-Range"))
     .out(header[String]("Content-Length"))
-    .out(statusCode)
-    .out(streamBody[EntityBody[Task]](schemaFor[Byte], CodecFormat.TextPlain()))
+    .out(statusCode.description(StatusCode.PartialContent, "успешная операция").description(StatusCode.Ok, "никогда не возвращается"))
+    .out(
+      streamBody[EntityBody[Task]](
+        schemaFor[Byte].description("returns 'abcd' periodically at some rate as a stream, at google chrome this won't work"),
+        CodecFormat.TextPlain()
+      )
+    )
     .serverLogic(streamingK mapF toOutF run)
 
   private val streamReadFileBlocker = Blocker.liftExecutionContext(ExecutionContext.fromExecutorService(Executors.newFixedThreadPool(4)))

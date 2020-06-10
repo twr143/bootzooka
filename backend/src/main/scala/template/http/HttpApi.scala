@@ -59,7 +59,7 @@ class HttpApi(
       .>>= { monitoredRoutes =>
         val app: HttpApp[Task] = Router(
           // for /api/v1 requests, first trying the API; then the docs; then, returning 404
-          s"$apiContextPath" -> (CORS(monitoredRoutes, corsConfig) <+> docsRoutes <+> respondWithNotFound),
+          s"$apiContextPath" -> (CORS(monitoredRoutes, corsConfig) <+> CORS(docsRoutes, corsConfig) <+> respondWithNotFound),
           "/admin" -> adminRoutes,
           // for all other requests, first trying getting existing webapp resource;
           // otherwise, returning index.html; this is needed to support paths in the frontend apps (e.g. /login)
