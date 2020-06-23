@@ -23,32 +23,32 @@ object Main extends StrictLogging {
     val initModule = new InitModule {}
     initModule.logConfig()
 
-    val mainTask = initModule.db.transactorResource.use { _xa =>
-      SignallingRef[Task, Boolean](false).flatMap { sFlag =>
-        initModule.baseSttpBackend.use { _baseSttpBackend =>
-          val modules = new MainModule {
-            override def xa: transactor.Transactor[Task] = _xa
-            override def baseSttpBackend: SttpBackend[Task, Nothing, Nothing] = _baseSttpBackend
-            override def config: Config = initModule.config
-            override def shutdownFlag: Ref[Task, Boolean] = sFlag
-          }
+    (initModule.db.transactorResource, initModule.baseSttpBackend)
+      .mapN((_, _))
+      .use {
+        case (_xa, _baseSttpBackend) =>
+          Ref.of[Task, Boolean](false).flatMap { sFlag =>
+            val modules = new MainModule {
+              override def xa: transactor.Transactor[Task] = _xa
+              override def baseSttpBackend: SttpBackend[Task, Nothing, Nothing] = _baseSttpBackend
+              override def config: Config = initModule.config
+              override def shutdownFlag: Ref[Task, Boolean] = sFlag
+            }
 
-          modules.startBackgroundProcesses >> modules.httpApi.resource.use(_ =>
-            Task
-              .now("DEV".equalsIgnoreCase(initModule.config.env.mode))
-              .ifM(
-                Task.delay {
-                  logger.warn(s"${System.getProperty("os.name")} Press Ctrl+Z to exit...")
-                  while (System.in.read() != -1) {}
-                  logger.warn("Received end-of-file on stdin. Exiting")
-                  // optional shutdown code here
-                },
-                Task.sleep(1 seconds).untilM_(sFlag.get)
-              )
-          )
-        }
-      }
-    }
-    mainTask.runSyncUnsafe()
+            modules.startBackgroundProcesses >> modules.httpApi.resource.use(_ =>
+              Task
+                .now("DEV".equalsIgnoreCase(initModule.config.env.mode))
+                .ifM(
+                  Task.delay {
+                    logger.warn(s"${System.getProperty("os.name")} Press Ctrl+Z to exit...")
+                    while (System.in.read() != -1) {}
+                    logger.warn("Received end-of-file on stdin. Exiting")
+                    // optional shutdown code here
+                  },
+                  Task.sleep(1 seconds).untilM_(sFlag.get)
+                )
+            )
+          }
+      } runSyncUnsafe ()
   }
 }
