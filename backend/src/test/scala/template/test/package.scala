@@ -1,6 +1,6 @@
 package template
 
-import cats.effect.concurrent.Ref
+import cats.effect.concurrent.{Deferred, Ref}
 import template.config.{Config, ConfigModule}
 import com.softwaremill.quicklens._
 import fs2.concurrent.SignallingRef
@@ -13,7 +13,7 @@ import monix.execution.Scheduler.Implicits.global
 package object test {
   val DefaultConfig: Config = new ConfigModule {}.config
   val TestConfig: Config = DefaultConfig.modify(_.email.emailSendInterval).setTo(100.milliseconds)
-  val sFlag = Ref.of[Task, Boolean](false).runSyncUnsafe()
+  val sFlag = Deferred[Task, Unit].runSyncUnsafe()
   val alpha = "abcdefghijklmnopqrstuvwxyz"
   val size = alpha.size
 

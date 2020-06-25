@@ -26,7 +26,7 @@ class UserApiTest extends BaseTest with TestEmbeddedPostgres with Eventually {
     override lazy val baseSttpBackend: SttpBackend[Task, Nothing, NothingT] = SttpBackendStub(TaskMonadAsyncError)
     override lazy val config: Config = TestConfig
     override lazy val clock: Clock = testClock
-    override def shutdownSignal: Ref[Task, Boolean] = sFlag
+    override def shutdownSignal = sFlag
   }
 
   val requests = new Requests(modules)
