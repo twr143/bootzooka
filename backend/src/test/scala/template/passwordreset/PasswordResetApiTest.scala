@@ -24,7 +24,7 @@ class PasswordResetApiTest extends BaseTest with TestEmbeddedPostgres with Event
     override def xa: Transactor[Task] = currentDb.xa
     override lazy val baseSttpBackend: SttpBackend[Task, Nothing, NothingT] = SttpBackendStub(TaskMonadAsyncError)
     override lazy val config: Config = TestConfig
-    def shutdownFlag: Ref[Task, Boolean] = sFlag
+    def shutdownSignal: Ref[Task, Boolean] = sFlag
   }
 
   val requests = new Requests(modules)

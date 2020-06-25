@@ -5,7 +5,7 @@ import java.time.format.DateTimeFormatter
 import template.util._
 import cats.data.{Kleisli, NonEmptyList}
 import cats.data.NonEmptyList
-import cats.effect.concurrent.Ref
+import cats.effect.concurrent.Deferred
 import doobie.util.transactor.Transactor
 import io.circe.{Codec, Encoder}
 import io.circe.generic.AutoDerivation
@@ -23,7 +23,7 @@ import sttp.model.StatusCode
 /**
   * Created by Ilya Volynin on 18.04.2020 at 9:58.
   */
-class ServiceApi(http: Http, serviceService: ServiceService, xa: Transactor[Task], shutdownFlag: Ref[Task, Boolean]) {
+class ServiceApi(http: Http, serviceService: ServiceService, xa: Transactor[Task], shutdownFlag: Deferred[Task, Unit]) {
   import ServiceApi._
   import http._
   private val UserPath = "user"
@@ -31,7 +31,7 @@ class ServiceApi(http: Http, serviceService: ServiceService, xa: Transactor[Task
   val shutdownK: Kleisli[Task, Unit, StatusCode] =
     Kleisli { _ =>
       for {
-        _ <- shutdownFlag.update(_ => true)
+        _ <- shutdownFlag.complete(())
         r <- Task.delay(StatusCode.Accepted)
       } yield r
     }

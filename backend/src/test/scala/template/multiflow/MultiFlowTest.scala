@@ -34,7 +34,7 @@ class MultiFlowTest extends BaseTest with Eventually {
     override lazy val baseSttpBackend: SttpBackend[Task, Nothing, NothingT] = SttpBackendStub(TaskMonadAsyncError)
     override lazy val config: Config = TestConfig
     override lazy val clock: Clock = testClock
-    def shutdownFlag: Ref[Task, Boolean] = sFlag
+    def shutdownSignal: Ref[Task, Boolean] = sFlag
   }
 
   val requests = new Requests(modules)

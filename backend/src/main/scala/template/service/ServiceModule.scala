@@ -1,5 +1,5 @@
 package template.service
-import cats.effect.concurrent.Ref
+import cats.effect.concurrent.Deferred
 import doobie.util.transactor.Transactor
 import monix.eval.Task
 import template.email.{EmailScheduler, EmailTemplates}
@@ -13,7 +13,7 @@ import template.util.BaseModule
 trait ServiceModule extends BaseModule {
 
   lazy val serviceModel = new ServiceModel
-  lazy val serviceApi = new ServiceApi(http, serviceService, xa, shutdownFlag)
+  lazy val serviceApi = new ServiceApi(http, serviceService, xa, shutdownSignal)
   lazy val serviceService = new ServiceService(serviceModel)
 
   def http: Http
@@ -22,5 +22,5 @@ trait ServiceModule extends BaseModule {
   def emailTemplates: EmailTemplates
   def apiKeyService: ApiKeyService
   def xa: Transactor[Task]
-  def shutdownFlag: Ref[Task, Boolean]
+  def shutdownSignal: Deferred[Task, Unit]
 }
