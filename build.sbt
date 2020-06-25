@@ -17,7 +17,7 @@ val tsecVersion = "0.1.0"
 val sttpVersion = "2.1.5"
 val prometheusVersion = "0.9.0"
 val tapirVersion = "0.15.3"
-
+ThisBuild / useCoursier := false
 val dbDependencies = Seq(
   "org.tpolecat" %% "doobie-core" % doobieVersion,
   "org.tpolecat" %% "doobie-hikari" % doobieVersion,
