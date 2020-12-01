@@ -99,7 +99,6 @@ case class FileStreamingApi(http: Http, auth: Auth[ApiKey], config: FSConfig)(
     val size = 100
     stopFlag = false
     for {
-//      _ <- stopS.set(false)
       r <- Stream
         .emit(List[Char]('a', 'b', 'c', 'd'))
         .repeat
