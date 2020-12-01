@@ -36,8 +36,9 @@ import sttp.tapir.Codec._
 /**
   * Created by Ilya Volynin on 16.12.2019 at 12:12.
   */
-case class FileStreamingApi(http: Http, auth: Auth[ApiKey], config: FSConfig)(implicit sttpBackend: SttpBackend[Task, Nothing, Nothing])
-    extends StrictLogging {
+case class FileStreamingApi(http: Http, auth: Auth[ApiKey], config: FSConfig)(
+    implicit sttpBackend: SttpBackend[Task, Nothing, Nothing]
+) extends StrictLogging {
   import FileStreamingApi._
   import http._
 
@@ -93,15 +94,19 @@ case class FileStreamingApi(http: Http, auth: Auth[ApiKey], config: FSConfig)(im
 
   import fs2._
 
+  var stopFlag = false
   val streamingK: Kleisli[Task, Unit, (String, String, String, StatusCode, Stream[Task, Byte])] = Kleisli { _ =>
     val size = 100
+    stopFlag = false
     for {
+//      _ <- stopS.set(false)
       r <- Stream
         .emit(List[Char]('a', 'b', 'c', 'd'))
         .repeat
         .>>=(list => Stream.chunk(Chunk.seq(list)))
         .metered[Task](100.millis)
         .take(size)
+        .takeWhile(_ => !stopFlag)
         .covary[Task]
         .map(_.toByte)
         .onFinalize(Task(logger.warn("stream finalized")))
@@ -110,6 +115,10 @@ case class FileStreamingApi(http: Http, auth: Auth[ApiKey], config: FSConfig)(im
       _ <- Task.now(logger.warn("task finished working"))
     } yield r
   }
+  private val stopStreamingEndpoint = baseEndpoint.get
+    .in(fsPath / "stopstreaming")
+    .serverLogic(_ => toOutF[Unit](Task.now({ stopFlag = true })))
+
   private val streamingEndpoint = baseEndpoint.get
     .description(
       "Бессмысленный и беспощадный реквест частичного ответа. This is a get request currentlyl having no parameters (and payload)"
@@ -169,7 +178,8 @@ case class FileStreamingApi(http: Http, auth: Auth[ApiKey], config: FSConfig)(im
         fileRetrievalEndpoint,
         streamingEndpoint,
         streamingFileEndpoint,
-        notImplementedEndpoint
+        notImplementedEndpoint,
+        stopStreamingEndpoint
       )
       .map(_.tag("fileStorage"))
 }
